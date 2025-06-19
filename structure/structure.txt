@@ -1,0 +1,49 @@
+file_manager/
+│
+├── structure/
+│   └── structure.txt             # Project structure documentation
+│
+├── file_manager/                 # Core application code
+│   ├── core/                     # Fundamental operations and plugin system
+│   │   ├── file_system.cpp
+│   │   ├── file_system.hpp
+│   │   ├── plugin_interface.hpp  # Abstract plugin API
+│   │   └── plugin_manager.cpp    # Plugin loader/manager
+│   │
+│   ├── gui/                      # Qt-based GUI components
+│   │   ├── main_window.cpp
+│   │   ├── main_window.hpp
+│   │   ├── file_view.cpp
+│   │   └── file_view.hpp
+│   │
+│   └── utilities/                # Helper utilities
+│       ├── logger.hpp
+│       └── error_handler.hpp     # Centralized error handling
+│
+├── plugins/                      # Plugin implementations
+│   ├── basic_operations/         # Core file operation plugins
+│   │   ├── CMakeLists.txt
+│   │   ├── copy_plugin.cpp
+│   │   ├── delete_plugin.cpp
+│   │   └── move_plugin.cpp
+│   │   └── metadata.json         # Plugin metadata (optional)
+│   │
+│   └── example_plugin/           # Template/example for new plugins
+│       ├── CMakeLists.txt
+│       ├── example_plugin.cpp
+│       └── metadata.json
+│
+├── app/                          # Application entry point
+│   └── main.cpp
+│
+├── resources/                    # Static assets
+│   └── icons/
+│
+├── tests/                        # Unit and integration tests
+│   ├── core_tests.cpp
+│   └── gui_tests.cpp
+│
+├── CMakeLists.txt                # Main build configuration
+│
+└── cmake/                        # Build system helpers
+    └── PluginConfig.cmake
