@@ -1,49 +1,63 @@
 file_manager/
 │
 ├── structure/
-│   └── structure.txt             # Project structure documentation
+│   └── structure.txt
 │
-├── file_manager/                 # Core application code
-│   ├── core/                     # Fundamental operations and plugin system
-│   │   ├── file_system.cpp
+├── include/                              # All public/project headers
+│   ├── core/
 │   │   ├── file_system.hpp
-│   │   ├── plugin_interface.hpp  # Abstract plugin API
-│   │   └── plugin_manager.cpp    # Plugin loader/manager
+│   │   ├── plugin_interface.hpp
+│   │   └── plugin_manager.hpp
 │   │
-│   ├── gui/                      # Qt-based GUI components
-│   │   ├── main_window.cpp
+│   ├── gui/
 │   │   ├── main_window.hpp
-│   │   ├── file_view.cpp
 │   │   └── file_view.hpp
 │   │
-│   └── utilities/                # Helper utilities
+│   └── utilities/
 │       ├── logger.hpp
-│       └── error_handler.hpp     # Centralized error handling
+│       └── error_handler.hpp
 │
-├── plugins/                      # Plugin implementations
-│   ├── basic_operations/         # Core file operation plugins
+├── file_manager/                         # Core application code (sources only)
+│   ├── core/
+│   │   ├── file_system.cpp
+│   │   ├── plugin_manager.cpp
+│   │
+│   ├── gui/
+│   │   ├── main_window.cpp
+│   │   └── file_view.cpp
+│   │
+│   └── utilities/
+│       ├── logger.cpp
+│       └── error_handler.cpp
+│
+├── plugins/
+│   ├── basic_operations/
 │   │   ├── CMakeLists.txt
 │   │   ├── copy_plugin.cpp
 │   │   ├── delete_plugin.cpp
-│   │   └── move_plugin.cpp
-│   │   └── metadata.json         # Plugin metadata (optional)
+│   │   ├── move_plugin.cpp
+│   │   ├── copy_plugin.hpp
+│   │   ├── delete_plugin.hpp
+│   │   ├── move_plugin.hpp
+│   │   └── metadata.json
 │   │
-│   └── example_plugin/           # Template/example for new plugins
+│   └── example_plugin/
 │       ├── CMakeLists.txt
 │       ├── example_plugin.cpp
+│       ├── example_plugin.hpp
 │       └── metadata.json
 │
-├── app/                          # Application entry point
+├── app/
 │   └── main.cpp
 │
-├── resources/                    # Static assets
+├── resources/
 │   └── icons/
 │
-├── tests/                        # Unit and integration tests
+├── tests/
 │   ├── core_tests.cpp
 │   └── gui_tests.cpp
 │
-├── CMakeLists.txt                # Main build configuration
+├── CMakeLists.txt
 │
-└── cmake/                        # Build system helpers
+└── cmake/
     └── PluginConfig.cmake
