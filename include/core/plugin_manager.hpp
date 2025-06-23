@@ -59,6 +59,8 @@ private:
     // Fast lookup table mapping plugin name to its instance pointer
     std::unordered_map<std::string, IFileManagerPlugin*> nameToPlugin_;
 
+    //Helper function to tell which type of os files we need to use
+    bool is_shared_library(const std::filesystem::path& path) const;
     // Internal helper function to load a single plugin file
     // Returns true if plugin was loaded successfully, false otherwise
     bool loadPluginFile(const std::filesystem::path& filePath);
