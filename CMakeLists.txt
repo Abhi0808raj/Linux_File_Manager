@@ -37,6 +37,7 @@ file(GLOB_RECURSE UTILITY_SOURCES
 )
 set(APP_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp
+        include/core/plugin_manager.hpp
 )
 
 # Shared library for core logic
