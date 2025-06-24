@@ -36,18 +36,20 @@ file_manager/
 │   │   │   ├── copy_plugin.hpp
 │   │   │   ├── delete_plugin.hpp
 │   │   │   └── move_plugin.hpp
-│   │   ├── CMakeLists.txt
-│   │   ├── copy_plugin.cpp
-│   │   ├── delete_plugin.cpp
-│   │   ├── move_plugin.cpp
-│   │   └── metadata.json
+│   │   ├── src/
+│   │   │   ├── copy_plugin.cpp
+│   │   │   ├── delete_plugin.cpp
+│   │   │   └── move_plugin.cpp
+│   │   ├── metadata.json
+│   │   └── CMakeLists.txt
 │   │
 │   └── example_plugin/
 │       ├── include/
 │       │   └── example_plugin.hpp
-│       ├── CMakeLists.txt
-│       ├── example_plugin.cpp
-│       └── metadata.json
+│       ├── src/
+│       │   └── example_plugin.cpp
+│       ├── metadata.json
+│       └── CMakeLists.txt
 ├── app/
 │   └── main.cpp
 │
