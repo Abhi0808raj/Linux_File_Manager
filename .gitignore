@@ -1,3 +1,69 @@
+# Ignore everything
+/*
+# Allow structure.txt and .gitignore
+!/.gitignore
+!/structure/
+!/structure/structure.txt
+
+# Project files to keep
+!/CMakeLists.txt
+!/cmake/
+!/cmake/PluginConfig.cmake
+
+!/include/
+!/include/core/
+!/include/core/*.hpp
+!/include/gui/
+!/include/gui/*.hpp
+!/include/utilities/
+!/include/utilities/*.hpp
+
+!/file_manager/
+!/file_manager/core/
+!/file_manager/core/*.cpp
+!/file_manager/gui/
+!/file_manager/gui/*.cpp
+!/file_manager/utilities/
+!/file_manager/utilities/*.cpp
+
+!/plugins/
+!/plugins/basic_operations/
+!/plugins/basic_operations/*.cpp
+!/plugins/basic_operations/*.hpp
+!/plugins/basic_operations/metadata.json
+!/plugins/example_plugin/
+!/plugins/example_plugin/*.cpp
+!/plugins/example_plugin/*.hpp
+!/plugins/example_plugin/metadata.json
+
+!/app/
+!/app/main.cpp
+
+!/resources/
+!/resources/icons/
+
+!/tests/
+!/tests/*.cpp
+
+# Build output
+/cmake-build-*/
+/build/
+/bin/
+/*.user
+*.log
+*.obj
+*.o
+*.a
+*.so
+*.exe
+*.out
+.DS_Store
+.idea/
+
+
+
+
+
 # Prerequisites
 *.d
 
@@ -30,3 +96,4 @@
 *.exe
 *.out
 *.app
+
