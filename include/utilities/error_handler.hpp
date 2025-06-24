@@ -7,7 +7,7 @@
 #include<mutex>          //for thread safe operations
 #include<functional>     //used to store custom error callback function
 #include<cstring>        //provides C style string manipulation
-#include<cerrnoo>        //for identifying cause of low level system errors
+#include<cerrno>        //for identifying cause of low level system errors
 
 //Base Class for custom Exception
 

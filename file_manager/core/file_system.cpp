@@ -71,7 +71,7 @@ bool FileSystem::remove(const fs::path& path) {
 bool FileSystem::copy(const fs::path& source, const fs::path& destination, bool overwrite) {
     std::error_code ec;
     //default copy behaviour from copy_options class in filesystem
-    fs::copy_options options=fs::copy_options()::none;
+    fs::copy_options options=fs::copy_options::none;
     if (overwrite) {
         options=fs::copy_options::overwrite_existing;
     }
