@@ -37,6 +37,8 @@ file(GLOB_RECURSE UTILITY_SOURCES
 )
 set(APP_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp
+        file_manager/utilities/error_handler.cpp
+        file_manager/utilities/logger.cpp
 )
 
 # Shared library for core logic
