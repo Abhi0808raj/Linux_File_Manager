@@ -37,7 +37,6 @@ file(GLOB_RECURSE UTILITY_SOURCES
 )
 set(APP_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp
-        include/core/plugin_manager.hpp
 )
 
 # Shared library for core logic
@@ -59,6 +58,10 @@ target_link_libraries(file_manager_core
 add_executable(${MAIN_EXECUTABLE_NAME}
         ${APP_SOURCES}
 )
+target_include_directories(${MAIN_EXECUTABLE_NAME}
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 
 target_link_libraries(${MAIN_EXECUTABLE_NAME}
         PRIVATE file_manager_core
@@ -87,7 +90,8 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)
     enable_testing()
     file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
 
-    add_executable(tests ${TEST_SOURCES})
+    add_executable(tests ${TEST_SOURCES}
+            tests/test_file_system_only.cpp)
 
     target_link_libraries(tests
             PRIVATE Qt6::Widgets file_manager_core
@@ -120,3 +124,11 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Qt version: ${Qt6_VERSION}")
 message(STATUS "Source directory: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "Binary directory: ${CMAKE_BINARY_DIR}")
+
+
+#ONly for testing
+option(TEST_FILE_SYSTEM_ONLY "Enable standalone test for file_system.cpp" OFF)
+
+if(TEST_FILE_SYSTEM_ONLY)
+    add_subdirectory(tests)
+endif()
