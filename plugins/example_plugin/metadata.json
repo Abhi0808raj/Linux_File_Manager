@@ -1,0 +1,15 @@
+{
+  "Id": "example_plugin",
+  "Name": "Example Plugin",
+  "VendorId": "yourcompany",
+  "Vendor": "Your Company Name",
+  "Version": "1.0.0",
+  "CompatVersion": "1.0.0",
+  "Category": "Example",
+  "Description": "An example plugin demonstrating plugin structure and implementation.",
+  "License": "MIT",
+  "Copyright": "(C) 2025 Your Company",
+  "Url": "https://yourcompany.com/plugins/example_plugin",
+  "Dependencies": [],
+  "Platform": ".*"
+}

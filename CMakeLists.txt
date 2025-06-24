@@ -41,6 +41,10 @@ set(APP_SOURCES
         file_manager/utilities/logger.cpp
         tests/Logger_Test/test_logger.cpp
         tests/Error_Handler_Test/error_handler_test.cpp
+        plugins/basic_operations/include/copy_plugin.hpp
+        plugins/basic_operations/include/delete_plugin.hpp
+        plugins/basic_operations/include/move_plugin.hpp
+        plugins/example_plugin/include/example_plugin.hpp
 )
 
 # Shared library for core logic
