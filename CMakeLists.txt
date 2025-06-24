@@ -39,6 +39,8 @@ set(APP_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp
         file_manager/utilities/error_handler.cpp
         file_manager/utilities/logger.cpp
+        tests/Logger_Test/test_logger.cpp
+        tests/Error_Handler_Test/error_handler_test.cpp
 )
 
 # Shared library for core logic
@@ -93,7 +95,8 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)
     file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
 
     add_executable(tests ${TEST_SOURCES}
-            tests/test_file_system_only.cpp)
+            tests/File_system_Test/test_file_system_only.cpp
+            tests/test_utilities.cpp)
 
     target_link_libraries(tests
             PRIVATE Qt6::Widgets file_manager_core
@@ -128,9 +131,20 @@ message(STATUS "Source directory: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "Binary directory: ${CMAKE_BINARY_DIR}")
 
 
-#ONly for testing
-option(TEST_FILE_SYSTEM_ONLY "Enable standalone test for file_system.cpp" OFF)
+#Only for testing
+# --- Modular Testing ---
+option(TEST_FILE_SYSTEM_ONLY "Build file system test only" OFF)
+option(TEST_LOGGER_ONLY "Build logger test only" OFF)
+option(TEST_ERROR_HANDLER_ONLY "Build error handler test only" OFF)
 
-if(TEST_FILE_SYSTEM_ONLY)
-    add_subdirectory(tests)
+if(TEST_FILE_SYSTEM_ONLY )
+    add_subdirectory(tests/File_system_Test)
+endif()
+
+if(TEST_LOGGER_ONLY)
+    add_subdirectory(tests/Logger_Test)
+endif()
+
+if(TEST_ERROR_HANDLER_ONLY)
+    add_subdirectory(tests/Error_Handler_Test)
 endif()
