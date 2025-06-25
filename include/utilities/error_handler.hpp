@@ -189,6 +189,34 @@ public:
         std::terminate();  // Immediately stop the program
     }
 
+    template<typename... Args>
+    static std::string format(Args&&... args) {
+        std::ostringstream oss;
+        (oss << ... << args);  // Fold expression in C++17
+        return oss.str();
+    }
+    template<typename... Args>
+    static void info(Args&&... args) {
+        instance().logError(ErrorSeverity::WARNING, format(std::forward<Args>(args)...));
+    }
+
+    template<typename... Args>
+   static void warning(Args&&... args) {
+        instance().logError(ErrorSeverity::WARNING, format(std::forward<Args>(args)...));
+    }
+
+    template<typename... Args>
+    static void error(Args&&... args) {
+        instance().logError(ErrorSeverity::ERROR, format(std::forward<Args>(args)...));
+    }
+
+
+    template<typename... Args>
+    static void critical(Args&&... args) {
+        critical(format(std::forward<Args>(args)...));
+    }
+
+
 private:
     mutable std::mutex mutex_;      // Thread safety
     ErrorCallback errorCallback_;   // Custom callback
@@ -202,38 +230,39 @@ private:
 
     // Core method for logging errors
     void logError(ErrorSeverity severity, const std::string& message);
+
+
 };
 
+
+
 // Macros for more readable usage
-
-// check if condition is true and throws if false
 #define FM_ASSERT(condition, ...) \
-    ErrorHandler::assert(condition, __VA_ARGS__)
+ErrorHandler::assert(condition, __VA_ARGS__)
 
-// Requirement failed macro
 #define FM_REQUIRE(condition, ...) \
-    ErrorHandler::assert<FileManagerException>(condition, "Requirement failed: ", __VA_ARGS__)
+ErrorHandler::assert<FileManagerException>(condition, "Requirement failed: ", __VA_ARGS__)
 
-// Macro for throwing the message
 #define FM_THROW(...) \
-    ErrorHandler::raiseError<FileManagerException>(__VA_ARGS__)
+ErrorHandler::raiseError<FileManagerException>(__VA_ARGS__)
 
-// Macro for file system exception
 #define FM_THROW_FS(...) \
-    ErrorHandler::raiseError<FileSystemException>(__VA_ARGS__)
+ErrorHandler::raiseError<FileSystemException>(__VA_ARGS__)
 
-// Macro for throwing plugin exception
 #define FM_THROW_PLUGIN(...) \
-    ErrorHandler::raiseError<PluginException>(__VA_ARGS__)
+ErrorHandler::raiseError<PluginException>(__VA_ARGS__)
 
-// Macro for throwing GUI Exception
 #define FM_THROW_GUI(...) \
-    ErrorHandler::raiseError<GuiException>(__VA_ARGS__)
+ErrorHandler::raiseError<GuiException>(__VA_ARGS__)
 
-// Macro for logging warnings
 #define FM_WARNING(...) \
-    ErrorHandler::warning(__VA_ARGS__)
+ErrorHandler::warning(__VA_ARGS__)
 
-// Macro for logging Critical errors and terminating the program
 #define FM_CRITICAL(...) \
-    ErrorHandler::critical(__VA_ARGS__)
+ErrorHandler::critical(__VA_ARGS__)
+
+#define FM_ERROR(...) \
+ErrorHandler::error(__VA_ARGS__)
+
+#define FM_INFO(...) \
+ErrorHandler::info(__VA_ARGS__)
