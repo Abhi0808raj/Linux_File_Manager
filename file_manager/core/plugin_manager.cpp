@@ -35,11 +35,11 @@ bool PluginManager::loadPlugins(const std::string& directory) {
 
 //Unloading all plugins and clean internal containers
 void PluginManager::unloadPlugins() {
-    for (&auto entry:loadedPlugins_) {
+    for (auto &entry:loadedPlugins_) {
         unloadPlugin(entry);   //Unload each plugin
     }
     loadedPlugins_.clear();       // Clear Plugin List
-    nameToPlugins_.clear();       // Clear name to pointer map
+    nameToPlugin_.clear();       // Clear name to pointer map
 }
 
 //Function to return list of all pointers to all currently loaded plugin instances
@@ -72,7 +72,7 @@ size_t PluginManager::pluginCount() const {
 // PRIVATE METHODS
 
 // Check if the file has shared library extension based on platform
-bool PluginManager::is_shared_library(const std::filesystem::path& path) {
+bool PluginManager::is_shared_library(const std::filesystem::path& path) const{
     #ifdef _WIN32
         return path.extension() == ".dll";
     #else
