@@ -137,6 +137,7 @@ message(STATUS "Binary directory: ${CMAKE_BINARY_DIR}")
 
 #Only for testing
 # --- Modular Testing ---
+option(TEST_PLUGIN_MANAGER_ONLY "Plugin Manager test only" OFF)
 option(TEST_FILE_SYSTEM_ONLY "Build file system test only" OFF)
 option(TEST_LOGGER_ONLY "Build logger test only" OFF)
 option(TEST_ERROR_HANDLER_ONLY "Build error handler test only" OFF)
@@ -152,3 +153,7 @@ endif()
 if(TEST_ERROR_HANDLER_ONLY)
     add_subdirectory(tests/Error_Handler_Test)
 endif()
+if(TEST_PLUGIN_MANAGER_ONLY)
+    add_subdirectory(tests/Plugin_Manager_Test)
+endif()
+
