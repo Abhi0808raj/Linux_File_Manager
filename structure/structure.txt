@@ -57,8 +57,18 @@ file_manager/
 │   └── icons/
 │
 ├── tests/
-│   ├── core_tests.cpp
-│   └── gui_tests.cpp
+│   ├── Error_Handler_Test/
+│   │   ├── CMakeLists.txt
+│   │   └── error_handler_test.cpp
+│   ├── File_system_Test/
+│   │   ├── CMakeLists.txt
+│   │   └── test_file_system_only.cpp
+│   ├── Logger_Test/
+│   │   ├── CMakeLists.txt
+│   │   └── test_logger.cpp
+│   ├── Plugin_Manager_Test/
+│        ├── CMakeLists.txt
+│        └── test_plugin_manager.cpp
 │
 ├── CMakeLists.txt
 │
