@@ -26,6 +26,10 @@ include_directories(
 )
 
 # Source files
+file(GLOB_RECURSE GUI_HEADERS
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/gui/*.hpp"
+)
+
 file(GLOB_RECURSE CORE_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/file_manager/core/*.cpp"
 )
@@ -39,20 +43,26 @@ set(APP_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/app/main.cpp
         file_manager/utilities/error_handler.cpp
         file_manager/utilities/logger.cpp
-        tests/Logger_Test/test_logger.cpp
-        tests/Error_Handler_Test/error_handler_test.cpp
         plugins/basic_operations/include/copy_plugin.hpp
         plugins/basic_operations/include/delete_plugin.hpp
         plugins/basic_operations/include/move_plugin.hpp
         plugins/example_plugin/include/example_plugin.hpp
+#        tests/Logger_Test/test_logger.cpp
+#        tests/Error_Handler_Test/error_handler_test.cpp
+
 )
 
 # Shared library for core logic
-add_library(file_manager_core STATIC
+add_library(file_manager_core STATIC)
+
+target_sources(file_manager_core
+        PRIVATE
+        ${GUI_HEADERS}
         ${CORE_SOURCES}
         ${GUI_SOURCES}
         ${UTILITY_SOURCES}
 )
+
 
 target_include_directories(file_manager_core PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -93,22 +103,6 @@ if(EXISTS ${RESOURCES_DIR})
     target_sources(${MAIN_EXECUTABLE_NAME} PRIVATE ${RES_SOURCES})
 endif()
 
-# Tests
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-    enable_testing()
-    file(GLOB_RECURSE TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
-
-    add_executable(tests ${TEST_SOURCES}
-            tests/File_system_Test/test_file_system_only.cpp
-    )
-
-    target_link_libraries(tests
-            PRIVATE Qt6::Widgets file_manager_core
-    )
-
-    add_test(NAME all_tests COMMAND tests)
-endif()
-
 # Installation
 install(TARGETS ${MAIN_EXECUTABLE_NAME}
         DESTINATION bin
@@ -142,6 +136,7 @@ option(TEST_FILE_SYSTEM_ONLY "Build file system test only" OFF)
 option(TEST_LOGGER_ONLY "Build logger test only" OFF)
 option(TEST_ERROR_HANDLER_ONLY "Build error handler test only" OFF)
 
+
 if(TEST_FILE_SYSTEM_ONLY )
     add_subdirectory(tests/File_system_Test)
 endif()
@@ -153,7 +148,7 @@ endif()
 if(TEST_ERROR_HANDLER_ONLY)
     add_subdirectory(tests/Error_Handler_Test)
 endif()
+
 if(TEST_PLUGIN_MANAGER_ONLY)
     add_subdirectory(tests/Plugin_Manager_Test)
 endif()
-
