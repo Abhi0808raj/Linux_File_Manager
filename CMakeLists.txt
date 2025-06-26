@@ -100,7 +100,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
     add_executable(tests ${TEST_SOURCES}
             tests/File_system_Test/test_file_system_only.cpp
-            tests/test_utilities.cpp)
+    )
 
     target_link_libraries(tests
             PRIVATE Qt6::Widgets file_manager_core
