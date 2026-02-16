@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Qt6 setup
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTORCC ON)  # This is important for .qrc files
 set(CMAKE_AUTOUIC ON)
 
 # Project structure
@@ -47,10 +47,10 @@ set(APP_SOURCES
         plugins/basic_operations/include/delete_plugin.hpp
         plugins/basic_operations/include/move_plugin.hpp
         plugins/example_plugin/include/example_plugin.hpp
-#        tests/Logger_Test/test_logger.cpp
-#        tests/Error_Handler_Test/error_handler_test.cpp
-
 )
+
+# Resource file - CHANGE THIS PART
+set(QRC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/resources/resources.qrc)
 
 # Shared library for core logic
 add_library(file_manager_core STATIC)
@@ -63,7 +63,6 @@ target_sources(file_manager_core
         ${UTILITY_SOURCES}
 )
 
-
 target_include_directories(file_manager_core PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -72,14 +71,15 @@ target_link_libraries(file_manager_core
         PUBLIC Qt6::Widgets
 )
 
-# Main application executable
+# Main application executable - UPDATED THIS PART
 add_executable(${MAIN_EXECUTABLE_NAME}
         ${APP_SOURCES}
+        ${QRC_FILE}  # Add the .qrc file here, not individual resources
 )
+
 target_include_directories(${MAIN_EXECUTABLE_NAME}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-
 
 target_link_libraries(${MAIN_EXECUTABLE_NAME}
         PRIVATE file_manager_core
@@ -96,12 +96,8 @@ include(cmake/PluginConfig.cmake)
 add_subdirectory(plugins/basic_operations)
 add_subdirectory(plugins/example_plugin)
 
-# Resource handling
-if(EXISTS ${RESOURCES_DIR})
-    file(GLOB_RECURSE RESOURCE_FILES "${RESOURCES_DIR}/*")
-    qt_add_resources(RES_SOURCES ${RESOURCE_FILES})
-    target_sources(${MAIN_EXECUTABLE_NAME} PRIVATE ${RES_SOURCES})
-endif()
+# REMOVE THE OLD RESOURCE HANDLING SECTION - Replace with this:
+# No need for manual resource handling since CMAKE_AUTORCC handles .qrc files automatically
 
 # Installation
 install(TARGETS ${MAIN_EXECUTABLE_NAME}
@@ -128,14 +124,12 @@ message(STATUS "Qt version: ${Qt6_VERSION}")
 message(STATUS "Source directory: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "Binary directory: ${CMAKE_BINARY_DIR}")
 
-
 #Only for testing
 # --- Modular Testing ---
 option(TEST_PLUGIN_MANAGER_ONLY "Plugin Manager test only" OFF)
 option(TEST_FILE_SYSTEM_ONLY "Build file system test only" OFF)
 option(TEST_LOGGER_ONLY "Build logger test only" OFF)
 option(TEST_ERROR_HANDLER_ONLY "Build error handler test only" OFF)
-
 
 if(TEST_FILE_SYSTEM_ONLY )
     add_subdirectory(tests/File_system_Test)

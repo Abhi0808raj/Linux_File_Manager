@@ -22,8 +22,11 @@ private slots:
     void on_actionUp_triggered();
     void on_actionBack_triggered();
     void on_actionForward_triggered();
+    void refreshView();
+    void updateStatusBar();
 
 private:
+    void setupModernUI();
     void setupModels();
     void setupConnections();
     void navigateToPath(const QString& path);
@@ -32,4 +35,5 @@ private:
     QFileSystemModel *m_fileSystemModel;
     QList<QString> m_history;
     int m_historyIndex = -1;
+    QString m_currentPath;
 };

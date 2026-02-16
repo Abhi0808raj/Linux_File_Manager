@@ -1,0 +1,12 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/">
+        <file>stylesheet.qss</file>
+        <file>icons/arrow_back.svg</file>
+        <file>icons/arrow_forward.svg</file>
+        <file>icons/arrow_upward.svg</file>
+        <file>icons/search.svg</file>
+        <file>icons/folder.svg</file>
+        <file>icons/article.svg</file>
+        <file>icons/refresh.svg</file>
+    </qresource>
+</RCC>

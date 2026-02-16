@@ -69,7 +69,7 @@ cmake --build . --config Release  # Windows
 
 ```bash
 # From build directory
-./file_manager
+./bin/file_manager
 ```
 
 ## Plugin Development
