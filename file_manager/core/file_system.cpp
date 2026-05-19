@@ -46,7 +46,7 @@ bool FileSystem::createDirectory(const fs::path& path) {
     //Create_directories used for creating directories again and again
     //until final complete path is created
 
-    bool result = fs::create_directory(path,ec)>0;
+    bool result = fs::create_directories(path,ec)>0;
     if (ec) {
         std::cerr << "Error creating directory: " << ec.message() << std::endl;
     }
@@ -71,9 +71,9 @@ bool FileSystem::remove(const fs::path& path) {
 bool FileSystem::copy(const fs::path& source, const fs::path& destination, bool overwrite) {
     std::error_code ec;
     //default copy behaviour from copy_options class in filesystem
-    fs::copy_options options=fs::copy_options::none;
+    fs::copy_options options=fs::copy_options::recursive;
     if (overwrite) {
-        options=fs::copy_options::overwrite_existing;
+        options|=fs::copy_options::overwrite_existing;
     }
     fs::copy(source,destination,options,ec);
     if (ec) {
