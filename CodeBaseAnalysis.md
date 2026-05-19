@@ -432,8 +432,8 @@ CMakeLists.txt (root)
 **Estimated scope:** 2–3 weeks
 
 #### 1.1 Fix Critical Bugs
-- [ ] Fix duplicate `warning()` and `critical()` declarations in `error_handler.hpp` (remove the second, forwarding-ref overloads or merge them)
-- [ ] Fix `critical()` infinite recursion in `error_handler.hpp`
+- ~[ ] Fix duplicate `warning()` and `critical()` declarations in `error_handler.hpp` (remove the second, forwarding-ref overloads or merge them)~
+- ~[ ] Fix `critical()` infinite recursion in `error_handler.hpp`~
 - [ ] Fix `plugins()` data race in `plugin_manager.cpp` — return by value or use a member vector
 - [ ] Fix `FileSystem::createDirectory` — switch to `fs::create_directories`
 - [ ] Fix `FileSystem::copy` — add `copy_options::recursive` for directory support
