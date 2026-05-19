@@ -1,99 +1,74 @@
-# Ignore everything
-/*
-# Allow structure.txt and .gitignore
-!/.gitignore
-!/structure/
-!/structure/structure.txt
+# Build directories
+build/
+bin/
+cmake-build-*/
+tests/*/build/
 
-# Project files to keep
-!/CMakeLists.txt
-!/cmake/
-!/cmake/PluginConfig.cmake
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
 
-!/include/
-!/include/core/
-!/include/core/*.hpp
-!/include/gui/
-!/include/gui/*.hpp
-!/include/utilities/
-!/include/utilities/*.hpp
+# Qt MOC/autogen artifacts
+*_autogen/
+moc_*.cpp
+moc_predefs.h
+qrc_*.cpp
+ui_*.h
 
-!/file_manager/
-!/file_manager/core/
-!/file_manager/core/*.cpp
-!/file_manager/gui/
-!/file_manager/gui/*.cpp
-!/file_manager/utilities/
-!/file_manager/utilities/*.cpp
-
-!/plugins/
-!/plugins/basic_operations/
-!/plugins/basic_operations/*.cpp
-!/plugins/basic_operations/*.hpp
-!/plugins/basic_operations/metadata.json
-!/plugins/example_plugin/
-!/plugins/example_plugin/*.cpp
-!/plugins/example_plugin/*.hpp
-!/plugins/example_plugin/metadata.json
-
-!/app/
-!/app/main.cpp
-
-!/resources/
-!/resources/icons/
-
-!/tests/
-!/tests/**
-
-# Build output
-/cmake-build-*/
-/build/
-/bin/
-/*.user
-*.log
-*.obj
+# Compiled object and library files
 *.o
+*.obj
 *.a
 *.so
-*.exe
-*.out
-.DS_Store
-.idea/
-
-
-
-
-
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
+*.so.*
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
+*.lo
+*.slo
 *.la
-*.a
-*.lib
+*.lai
+
+# Dependency files
+*.d
+
+# Precompiled headers
+*.gch
+*.pch
 
 # Executables
 *.exe
 *.out
 *.app
 
+# Build system files
+*.ninja
+*.ninja_deps
+*.ninja_log
+Makefile
+
+# IDE / editor
+.idea/
+.vscode/
+*.user
+*.creator
+*.creator.user
+*.config
+*.files
+*.includes
+*.cbp
+.DS_Store
+
+# Logs
+*.log
+
+
+# Graphify output
+graphify-out/
+
+# Cache
+.cache/

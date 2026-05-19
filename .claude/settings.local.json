@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -v \"\\\\.cpp$\")",
+      "Bash(git -C /media/NewVolume1/Coding/Projects/Linux_File_Manager log --oneline -20)"
+    ]
+  }
+}
