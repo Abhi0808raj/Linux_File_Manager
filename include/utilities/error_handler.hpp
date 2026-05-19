@@ -173,20 +173,16 @@ public:
     }
 
     // Logging a warning message (Non-Throwing)
-    template<typename... TArgs>
-    static void warning(const TArgs&... args) {
-        std::ostringstream oss;
-        (oss << ... << args);
-        instance().logError(ErrorSeverity::WARNING, oss.str());
+    template<typename... Args>
+    static void warning(Args&&... args) {
+        instance().logError(ErrorSeverity::WARNING, format(std::forward<Args>(args)...));
     }
 
     // Critical failure (Terminates Application)
-    template<typename... TArgs>
-    [[noreturn]] static void critical(const TArgs&... args) {
-        std::ostringstream oss;
-        (oss << ... << args);
-        instance().logError(ErrorSeverity::CRITICAL, oss.str());
-        std::terminate();  // Immediately stop the program
+    template<typename... Args>
+    [[noreturn]] static void critical(Args&&... args) {
+        instance().logError(ErrorSeverity::CRITICAL, format(std::forward<Args>(args)...));
+        std::terminate();  // Immediately stop the program  
     }
 
     template<typename... Args>
@@ -201,21 +197,9 @@ public:
     }
 
     template<typename... Args>
-   static void warning(Args&&... args) {
-        instance().logError(ErrorSeverity::WARNING, format(std::forward<Args>(args)...));
-    }
-
-    template<typename... Args>
     static void error(Args&&... args) {
         instance().logError(ErrorSeverity::ERROR, format(std::forward<Args>(args)...));
     }
-
-
-    template<typename... Args>
-    static void critical(Args&&... args) {
-        critical(format(std::forward<Args>(args)...));
-    }
-
 
 private:
     mutable std::mutex mutex_;      // Thread safety
@@ -230,7 +214,6 @@ private:
 
     // Core method for logging errors
     void logError(ErrorSeverity severity, const std::string& message);
-
 
 };
 

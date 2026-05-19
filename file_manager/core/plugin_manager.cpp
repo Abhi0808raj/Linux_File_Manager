@@ -42,16 +42,11 @@ void PluginManager::unloadPlugins() {
     nameToPlugin_.clear();       // Clear name to pointer map
 }
 
-//Function to return list of all pointers to all currently loaded plugin instances
-//It stores the references to avoid memory copying
-const std::vector<IFileManagerPlugin*>& PluginManager::plugins() const {
-    // IFileManagerPlugin object(defined in plugin_interface.hpp)
-    //Vector to store plugin pointers
-    static std::vector<IFileManagerPlugin*> pluginPtrs;
-    pluginPtrs.clear(); //To clear any previous pointers stored from earlier cells
-
+// Returns raw pointers to all currently loaded plugin instances.
+// Returned by value — each call constructs a fresh vector (NRVO eliminates the copy).
+std::vector<IFileManagerPlugin*> PluginManager::plugins() const {
+    std::vector<IFileManagerPlugin*> pluginPtrs;
     for (const auto& entry : loadedPlugins_) {
-        //.get() used to return raw pointer
         pluginPtrs.push_back(entry.instance.get());
     }
     return pluginPtrs;
