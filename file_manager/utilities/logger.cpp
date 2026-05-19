@@ -30,7 +30,14 @@ void Logger::log(ErrorSeverity severity, const std::string& message) {
     // get current time
     auto now = std::chrono::system_clock::now();
     auto t = std::chrono::system_clock::to_time_t(now);
-    logStream << "[" << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S") << "] ";
+    struct tm tm_buf{};
+    #if defined(_WIN32)
+        localtime_s(&tm_buf, &t);
+    #else
+        localtime_r(&t, &tm_buf);
+    #endif
+    logStream << "[" << std::put_time(&tm_buf, "%Y-%m-%d %H:%M:%S") << "] ";
+
 
     // add severity label
     switch (severity) {
