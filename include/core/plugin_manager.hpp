@@ -34,7 +34,7 @@ public:
     void unloadPlugins();
 
     // Return a list of raw pointers to the loaded plugin instances
-    const std::vector<IFileManagerPlugin*>& plugins() const;
+    std::vector<IFileManagerPlugin*> plugins() const;
 
     // Find and return a plugin instance by its name (returns nullptr if not found)
     IFileManagerPlugin* getPluginByName(const std::string& name) const;
