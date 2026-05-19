@@ -66,6 +66,7 @@ void ErrorHandler::logError(ErrorSeverity severity, const std::string& message) 
 
     const char* severityStr = "";
     switch (severity) {
+        case ErrorSeverity::INFO: severityStr = "INFO"; break;
         case ErrorSeverity::WARNING: severityStr = "WARNING"; break;
         case ErrorSeverity::ERROR: severityStr = "ERROR"; break;
         case ErrorSeverity::CRITICAL: severityStr = "CRITICAL"; break;

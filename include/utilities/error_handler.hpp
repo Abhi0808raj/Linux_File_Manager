@@ -51,6 +51,7 @@ public:
 
 // Enum for categorizing error severity
 enum class ErrorSeverity {
+    INFO,
     WARNING,
     ERROR,
     CRITICAL
@@ -121,7 +122,26 @@ public:
         Result(T&& value)
             : value_(std::move(value)), errorCode_(ErrorCode::SUCCESS), hasValue_(true) {}
 
+        // Error     public:
+        // Constructor when success
+        Result(T&& value)
+            : value_(std::move(value)), errorCode_(ErrorCode::SUCCESS), hasValue_(true) {}
+
         // Error constructor
+        Result(ErrorCode code, const std::string& message)
+            : errorCode_(code), errorMessage_(message), hasValue_(false) {}
+
+        bool isSuccess() const { return hasValue_; }
+        bool isFailure() const { return !hasValue_; }
+
+        // Returns a reference to the stored value if successful
+        // otherwise throws an exception
+        const T& value() const {
+            if (!hasValue_)
+                raiseError<FileManagerException>("Attempted to access value from failed result");
+            return value_;
+        }
+constructor
         Result(ErrorCode code, const std::string& message)
             : errorCode_(code), errorMessage_(message), hasValue_(false) {}
 
@@ -175,7 +195,7 @@ public:
     // Logging a warning message (Non-Throwing)
     template<typename... Args>
     static void warning(Args&&... args) {
-        instance().logError(ErrorSeverity::WARNING, format(std::forward<Args>(args)...));
+        instance().logError(ErrorSeverity::INFO, format(std::forward<Args>(args)...));
     }
 
     // Critical failure (Terminates Application)
