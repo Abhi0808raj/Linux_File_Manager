@@ -432,18 +432,18 @@ CMakeLists.txt (root)
 **Estimated scope:** 2–3 weeks
 
 #### 1.1 Fix Critical Bugs
-- [ ] Fix duplicate `warning()` and `critical()` declarations in `error_handler.hpp` (remove the second, forwarding-ref overloads or merge them)
-- [ ] Fix `critical()` infinite recursion in `error_handler.hpp`
-- [ ] Fix `plugins()` data race in `plugin_manager.cpp` — return by value or use a member vector
-- [ ] Fix `FileSystem::createDirectory` — switch to `fs::create_directories`
-- [ ] Fix `FileSystem::copy` — add `copy_options::recursive` for directory support
-- [ ] Fix `Logger::log` — replace `std::localtime` with `localtime_r` / `localtime_s` cross-platform wrapper
-- [ ] Fix `ErrorHandler::info()` — add `INFO` to `ErrorSeverity` enum, route correctly
+- [x] Fix duplicate `warning()` and `critical()` declarations in `error_handler.hpp` (remove the second, forwarding-ref overloads or merge them)
+- [x] Fix `critical()` infinite recursion in `error_handler.hpp`
+- [x] Fix `plugins()` data race in `plugin_manager.cpp` — return by value or use a member vector
+- [x] Fix `FileSystem::createDirectory` — switch to `fs::create_directories`
+- [x] Fix `FileSystem::copy` — add `copy_options::recursive` for directory support
+- [x] Fix `Logger::log` — replace `std::localtime` with `localtime_r` / `localtime_s` cross-platform wrapper
+- [x] Fix `ErrorHandler::info()` — add `INFO` to `ErrorSeverity` enum, route correctly
 
 #### 1.2 Clean Up Build System
-- [ ] Remove `file_manager/core/test.cpp` from `GLOB_RECURSE` scope (move tests to `tests/` or exclude explicitly)
-- [ ] Consolidate to one build directory; update `.gitignore`
-- [ ] Fix `PluginConfig.cmake` include path (`../include` is fragile relative path)
+- [x] Remove `file_manager/core/test.cpp` from `GLOB_RECURSE` scope (move tests to `tests/` or exclude explicitly)
+- [x] Consolidate to one build directory; update `.gitignore`
+- [x] Fix `PluginConfig.cmake` include path (`../include` is fragile relative path)
 
 #### 1.3 Connect Logger ↔ ErrorHandler
 - [ ] Add `INFO` severity to `ErrorSeverity` enum
@@ -616,7 +616,7 @@ CMakeLists.txt (root)
 | `app/main.cpp` | Entry point | Working |
 | `file_manager/core/file_system.cpp` | FileSystem implementation | Working (bugs) |
 | `file_manager/core/plugin_manager.cpp` | Plugin loader | Working (bugs) |
-| `file_manager/core/test.cpp` | Empty file | Remove |
+| `file_manager/core/test.cpp` | Empty file | Removed |
 | `file_manager/gui/main_window.cpp` | Main UI | Working (incomplete) |
 | `file_manager/gui/file_view.cpp` | File view widget | Stub |
 | `file_manager/utilities/error_handler.cpp` | Error handling | Working (bugs) |
