@@ -22,8 +22,10 @@ protected:
     fs::path tmp(const std::string& name) { return testDir / name; }
 
     void makeFile(const fs::path& p, const std::string& content = "data") {
-        std::ofstream f(p);
-        f << content;
+        std::ofstream f(p, std::ios::binary);
+        f.write(content.data(), static_cast<std::streamsize>(content.size()));
+        f.close();
+        ASSERT_TRUE(f.good()) << "makeFile failed to write: " << p;
     }
 };
 
@@ -49,6 +51,11 @@ TEST_F(FileSystemTest, IsFileReturnsTrueForRegularFile) {
 
 TEST_F(FileSystemTest, IsFileReturnsFalseForDirectory) {
     EXPECT_FALSE(FileSystem::isFile(testDir));
+}
+
+TEST_F(FileSystemTest, IsDirectoryReturnsFalseForFile) {
+    makeFile(tmp("notdir.txt"));
+    EXPECT_FALSE(FileSystem::isDirectory(tmp("notdir.txt")));
 }
 
 // --- createDirectory ---
@@ -111,6 +118,18 @@ TEST_F(FileSystemTest, MoveOverwritesExistingWhenFlagSet) {
     auto content = FileSystem::readFile(tmp("mdst2.txt"));
     ASSERT_TRUE(content.has_value());
     EXPECT_EQ(*content, "moved");
+}
+
+TEST_F(FileSystemTest, MoveDefaultBehaviorReplacesExistingDestOnLinux) {
+    // On Linux, fs::rename atomically replaces dst even without overwrite=true.
+    // This test documents that POSIX behavior.
+    makeFile(tmp("msrc3.txt"), "replace");
+    makeFile(tmp("mdst3.txt"), "will be replaced");
+    EXPECT_TRUE(FileSystem::move(tmp("msrc3.txt"), tmp("mdst3.txt")));
+    EXPECT_FALSE(fs::exists(tmp("msrc3.txt")));
+    auto content = FileSystem::readFile(tmp("mdst3.txt"));
+    ASSERT_TRUE(content.has_value());
+    EXPECT_EQ(*content, "replace");
 }
 
 // --- remove ---
