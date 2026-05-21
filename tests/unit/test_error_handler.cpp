@@ -42,6 +42,12 @@ TEST_F(ErrorHandlerTest, ResultMoveValueExtractsString) {
     EXPECT_EQ(std::move(r).moveValue(), "hello");
 }
 
+TEST_F(ErrorHandlerTest, ResultMoveValueThrowsOnFailure) {
+    auto r = ErrorHandler::Result<int>(
+        ErrorHandler::ErrorCode::UNKNOWN_ERROR, "cannot move");
+    EXPECT_THROW(std::move(r).moveValue(), FileManagerException);
+}
+
 // --- Result<T>: failure path ---
 
 TEST_F(ErrorHandlerTest, ResultFailureIsFailure) {
@@ -85,6 +91,13 @@ TEST_F(ErrorHandlerTest, SafeExecuteReturnsFailureOnStdException) {
     EXPECT_EQ(r.errorCode(), ErrorHandler::ErrorCode::UNKNOWN_ERROR);
 }
 
+TEST_F(ErrorHandlerTest, SafeExecuteErrorMessagePreservesExceptionMessage) {
+    auto r = ErrorHandler::safeExecute([]() -> int {
+        throw std::runtime_error("boom");
+    }, "risky_op");
+    EXPECT_EQ(r.errorMessage(), "boom");
+}
+
 TEST_F(ErrorHandlerTest, SafeExecuteReturnsFailureOnUnknownException) {
     auto r = ErrorHandler::safeExecute([]() -> int {
         throw 42;
@@ -119,6 +132,16 @@ TEST_F(ErrorHandlerTest, ExceptionPreservesMessage) {
     } catch (const FileManagerException& e) {
         EXPECT_STREQ(e.what(), "stored message");
         EXPECT_EQ(e.message(), "stored message");
+    }
+}
+
+TEST_F(ErrorHandlerTest, FileSystemExceptionPrependsPrefix) {
+    try {
+        ErrorHandler::raiseError<FileSystemException>("disk full");
+    } catch (const FileSystemException& e) {
+        const std::string msg(e.what());
+        EXPECT_NE(msg.find("disk full"), std::string::npos);
+        EXPECT_EQ(msg.rfind("FileSystem Error:", 0), 0u);
     }
 }
 
