@@ -446,9 +446,9 @@ CMakeLists.txt (root)
 - [x] Fix `PluginConfig.cmake` include path (`../include` is fragile relative path)
 
 #### 1.3 Connect Logger ↔ ErrorHandler
-- [ ] Add `INFO` severity to `ErrorSeverity` enum
-- [ ] Instantiate `Logger` as a member of (or dependency injected into) `ErrorHandler`
-- [ ] Route all `logError` calls through `Logger` in addition to `stderr`
+- [x] Add `INFO` severity to `ErrorSeverity` enum
+- [x] Instantiate `Logger` as a member of (or dependency injected into) `ErrorHandler`
+- [x] Route all `logError` calls through `Logger` in addition to `stderr`
 - [ ] Configure log file path using `QStandardPaths::AppDataLocation`
 
 #### 1.4 Route FileSystem through ErrorHandler

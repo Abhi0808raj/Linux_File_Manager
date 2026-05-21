@@ -1,4 +1,5 @@
 #include "error_handler.hpp"
+#include "logger.hpp"
 #include <iostream>
 #include <cstring>
 #include <cerrno>
@@ -50,7 +51,7 @@ ErrorHandler& ErrorHandler::instance() {
 }
 
 // Private constructor
-ErrorHandler::ErrorHandler() = default;
+ErrorHandler::ErrorHandler() : logger_(std::make_unique<Logger>("file_manager.log")) {}
 ErrorHandler::~ErrorHandler() = default;
 
 // Thread safe Custom logging and stores that log in
@@ -58,6 +59,12 @@ ErrorHandler::~ErrorHandler() = default;
 void ErrorHandler::setErrorCallback(ErrorCallback callback) {
     std::lock_guard<std::mutex> lock(mutex_);
     errorCallback_ = callback;
+}
+
+// Thread-safe logger replacement
+void ErrorHandler::setLogger(std::unique_ptr<Logger> logger) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    logger_ = std::move(logger);
 }
 
 // Core method for logging errors
@@ -74,6 +81,11 @@ void ErrorHandler::logError(ErrorSeverity severity, const std::string& message) 
 
     // Default logging to stderr
     std::cerr << "[" << severityStr << "] " << message << std::endl;
+
+    // Route to Logger file log
+    if (logger_) {
+        logger_->log(severity, message);
+    }
 
     // If custom handler is there use it
     if (errorCallback_) {

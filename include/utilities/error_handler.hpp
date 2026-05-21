@@ -8,6 +8,9 @@
 #include <functional>     // used to store custom error callback function
 #include <cstring>        // provides C style string manipulation
 #include <cerrno>         // for identifying cause of low level system errors
+#include <memory>         // for std::unique_ptr
+
+class Logger;
 
 // Base Class for custom Exception
 class FileManagerException : public std::exception {
@@ -75,6 +78,9 @@ public:
     // errorCallback which is to be used in logError
     void setErrorCallback(ErrorCallback callback);
 
+    // Thread-safe logger dependency injection
+    void setLogger(std::unique_ptr<Logger> logger);
+
     // Template method to create a custom exception for logging the error message
     // and throw it
     // It is reusable
@@ -122,26 +128,7 @@ public:
         Result(T&& value)
             : value_(std::move(value)), errorCode_(ErrorCode::SUCCESS), hasValue_(true) {}
 
-        // Error     public:
-        // Constructor when success
-        Result(T&& value)
-            : value_(std::move(value)), errorCode_(ErrorCode::SUCCESS), hasValue_(true) {}
-
         // Error constructor
-        Result(ErrorCode code, const std::string& message)
-            : errorCode_(code), errorMessage_(message), hasValue_(false) {}
-
-        bool isSuccess() const { return hasValue_; }
-        bool isFailure() const { return !hasValue_; }
-
-        // Returns a reference to the stored value if successful
-        // otherwise throws an exception
-        const T& value() const {
-            if (!hasValue_)
-                raiseError<FileManagerException>("Attempted to access value from failed result");
-            return value_;
-        }
-constructor
         Result(ErrorCode code, const std::string& message)
             : errorCode_(code), errorMessage_(message), hasValue_(false) {}
 
@@ -195,7 +182,7 @@ constructor
     // Logging a warning message (Non-Throwing)
     template<typename... Args>
     static void warning(Args&&... args) {
-        instance().logError(ErrorSeverity::INFO, format(std::forward<Args>(args)...));
+        instance().logError(ErrorSeverity::WARNING, format(std::forward<Args>(args)...));
     }
 
     // Critical failure (Terminates Application)
@@ -213,7 +200,7 @@ constructor
     }
     template<typename... Args>
     static void info(Args&&... args) {
-        instance().logError(ErrorSeverity::WARNING, format(std::forward<Args>(args)...));
+        instance().logError(ErrorSeverity::INFO, format(std::forward<Args>(args)...));
     }
 
     template<typename... Args>
@@ -224,6 +211,7 @@ constructor
 private:
     mutable std::mutex mutex_;      // Thread safety
     ErrorCallback errorCallback_;   // Custom callback
+    std::unique_ptr<Logger> logger_; // File logger member
 
     // Private constructor
     ErrorHandler();

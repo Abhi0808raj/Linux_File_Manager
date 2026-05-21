@@ -41,6 +41,9 @@ void Logger::log(ErrorSeverity severity, const std::string& message) {
 
     // add severity label
     switch (severity) {
+    case ErrorSeverity::INFO:
+        logStream << "[INFO] ";
+        break;
     case ErrorSeverity::WARNING:
         logStream << "[WARNING] ";
         break;
