@@ -71,6 +71,12 @@ target_link_libraries(file_manager_core
         PUBLIC Qt6::Widgets
 )
 
+# We compile file_manager_core (STATIC) with POSITION_INDEPENDENT_CODE ON
+# because shared plugin libraries link against it on Linux and require PIC.
+set_target_properties(file_manager_core PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+)
+
 # Main application executable - UPDATED THIS PART
 add_executable(${MAIN_EXECUTABLE_NAME}
         ${APP_SOURCES}

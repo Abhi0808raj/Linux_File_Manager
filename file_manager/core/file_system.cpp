@@ -1,7 +1,7 @@
 #include "file_system.hpp"
 #include <fstream>
-#include <iostream>
 #include <system_error>
+#include "error_handler.hpp"
 
 namespace fs = std::filesystem;
 
@@ -33,7 +33,7 @@ std::vector<fs::directory_entry> FileSystem::listDirectory(const fs::path& path)
             }
         }
     } catch (const fs::filesystem_error& e) {
-        std::cerr << "Error listing directory: " << e.what() << std::endl;
+        FM_ERROR("Error listing directory: ", e.what());
     }
     return entries;
 }
@@ -48,7 +48,7 @@ bool FileSystem::createDirectory(const fs::path& path) {
 
     bool result = fs::create_directories(path,ec)>0;
     if (ec) {
-        std::cerr << "Error creating directory: " << ec.message() << std::endl;
+        FM_ERROR("Error creating directory: ", ec.message());
     }
     return result;
 }
@@ -59,7 +59,7 @@ bool FileSystem::remove(const fs::path& path) {
     std::error_code ec;
     bool result = fs::remove_all(path,ec)>0;
     if (ec) {
-        std::cerr << "Error removing path: " << ec.message() << std::endl;
+        FM_ERROR("Error removing path: ", ec.message());
     }
     return result;
 }
@@ -77,7 +77,7 @@ bool FileSystem::copy(const fs::path& source, const fs::path& destination, bool 
     }
     fs::copy(source,destination,options,ec);
     if (ec) {
-        std::cerr<<"Error Copying: "<<ec.message()<<std::endl;
+        FM_ERROR("Error Copying: ", ec.message());
         return false;
     }
     return true;
@@ -89,7 +89,7 @@ bool FileSystem::move(const fs::path& source, const fs::path& destination, bool 
     if (overwrite&&fs::exists(destination)) {
         fs::remove_all(destination,ec);
         if (ec) {
-            std::cerr<<"Error removing existing destination"<<ec.message()<<std::endl;
+            FM_ERROR("Error removing existing destination: ", ec.message());
             return false;
         }
     }
@@ -100,7 +100,7 @@ bool FileSystem::move(const fs::path& source, const fs::path& destination, bool 
     //copy the file and then remove from the origin
     fs::rename(source,destination,ec);
     if (ec) {
-        std::cerr<<"Error moving: "<<ec.message()<<std::endl;
+        FM_ERROR("Error moving: ", ec.message());
         return false;
     }
     return true;
@@ -113,7 +113,7 @@ std::optional<uintmax_t> FileSystem::fileSize(const fs::path& path) {
     std::error_code ec;
     auto size = fs::file_size(path, ec);
     if (ec) {
-        std::cerr << "Error getting file size: " << ec.message() << std::endl;
+        FM_ERROR("Error getting file size: ", ec.message());
         return std::nullopt;
     }
     return size;
@@ -124,7 +124,7 @@ std::optional<fs::file_time_type> FileSystem::lastWriteTime(const fs::path& path
     std::error_code ec;
     auto time = fs::last_write_time(path, ec);
     if (ec) {
-        std::cerr << "Error getting last write time: " << ec.message() << std::endl;
+        FM_ERROR("Error getting last write time: ", ec.message());
         return std::nullopt;
     }
     return time;
@@ -138,7 +138,7 @@ std::optional<std::string> FileSystem::readFile(const fs::path& path) {
     //and it reads as binary
     std::ifstream file(path, std::ios::in | std::ios::binary);
     if (!file) {
-        std::cerr << "Error opening file for reading " << path << std::endl;
+        FM_ERROR("Error opening file for reading ", path.string());
         return std::nullopt;
     }
     //istreambuf_iterator<char>(file) reads the file byte by byte until end of file
@@ -151,7 +151,7 @@ std::optional<std::string> FileSystem::readFile(const fs::path& path) {
 bool FileSystem::writeFile(const fs::path& path, const std::string& content) {
     std::ofstream file(path, std::ios::out | std::ios::binary);
     if (!file) {
-        std::cerr << "Error opening file for writing " << path << std::endl;
+        FM_ERROR("Error opening file for writing ", path.string());
         return false;
     }
     file.write(content.data(), content.size());
