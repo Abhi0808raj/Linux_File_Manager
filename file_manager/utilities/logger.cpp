@@ -3,14 +3,35 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFileInfo>
+#include <QString>
 
 // Constructor that opens the log file
 Logger::Logger(const std::string& filename)
-    : logFile(filename, std::ios::app) // open file in append mode
 {
+    QString qFilename = QString::fromStdString(filename);
+    QFileInfo fileInfo(qFilename);
+    QString absoluteFilePath;
+
+    if (fileInfo.isRelative()) {
+        QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        // Ensure the directory exists
+        QDir().mkpath(appDataDir);
+        absoluteFilePath = QDir(appDataDir).filePath(qFilename);
+    } else {
+        absoluteFilePath = fileInfo.absoluteFilePath();
+        // Ensure the parent directory exists
+        QDir().mkpath(fileInfo.absolutePath());
+    }
+
+    std::string resolvedPath = absoluteFilePath.toStdString();
+    logFile.open(resolvedPath, std::ios::app); // open file in append mode
+
     // fallback in case file fails to open
     if (!logFile.is_open()) {
-        std::cerr << "Failed to open log file: " << filename << std::endl;
+        std::cerr << "Failed to open log file: " << resolvedPath << std::endl;
     }
 }
 

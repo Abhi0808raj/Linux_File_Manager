@@ -1,9 +1,10 @@
 #include "utilities/logger.hpp"  // Adjust the path as per your structure
 #include <iostream>
+#include <QDir>
 
 int main() {
-    // Create a logger instance (log file will be created in current directory)
-    Logger logger("test_log.txt");
+    // Create a logger instance (log file will be created in current directory as an absolute path)
+    Logger logger(QDir::current().absoluteFilePath("test_log.txt").toStdString());
 
     // Log messages of different severity
     logger.log(ErrorSeverity::WARNING, "This is a warning message.");

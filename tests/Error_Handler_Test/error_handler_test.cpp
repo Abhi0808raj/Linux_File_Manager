@@ -6,6 +6,7 @@
 #include <cassert>
 #include <fstream>
 #include <cstdio>
+#include <QDir>
 
 void test_info_warning_error_methods() {
     std::cout << "Running test_info_warning_error_methods..." << std::endl;
@@ -65,7 +66,7 @@ void test_handle_system_error() {
 void test_logger_connection() {
     std::cout << "Running test_logger_connection..." << std::endl;
 
-    const std::string logFileName = "test_error_handler.log";
+    const std::string logFileName = QDir::current().absoluteFilePath("test_error_handler.log").toStdString();
 
     // Clean up any pre-existing log file
     std::remove(logFileName.c_str());

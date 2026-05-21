@@ -219,7 +219,7 @@ CMakeLists.txt (root)
 | `logger.hpp` | — | `Logger` is never instantiated anywhere in the running application. It exists but is unused at runtime. |
 | `logger.hpp` | — | No `INFO` severity level — the `ErrorSeverity` enum used by Logger only has `WARNING`, `ERROR`, `CRITICAL`. Normal operations cannot be logged. |
 | `logger.cpp` | 33 | `std::localtime` is not thread-safe on all platforms. Should use `localtime_r` (POSIX) or `localtime_s` (Windows) for a cross-platform solution. |
-| `logger.hpp` | — | Log file path defaults to `"file_manager.log"` (relative) — will be written to whatever the current working directory is at launch, not a predictable platform-appropriate location (`~/.local/share/`, `%APPDATA%`, `~/Library/`). |
+| `logger.hpp` | — | Log file path defaults to `"file_manager.log"` — now resolved to predictable platform-appropriate location (`QStandardPaths::AppDataLocation`) at launch for relative paths. |
 | `logger.hpp` | — | No log rotation — a long-running instance will grow the log file indefinitely. |
 
 ---
@@ -449,7 +449,7 @@ CMakeLists.txt (root)
 - [x] Add `INFO` severity to `ErrorSeverity` enum
 - [x] Instantiate `Logger` as a member of (or dependency injected into) `ErrorHandler`
 - [x] Route all `logError` calls through `Logger` in addition to `stderr`
-- [ ] Configure log file path using `QStandardPaths::AppDataLocation`
+- [x] Configure log file path using `QStandardPaths::AppDataLocation`
 
 #### 1.4 Route FileSystem through ErrorHandler
 - [ ] Replace all `std::cerr` calls in `file_system.cpp` with `FM_ERROR` / `FM_WARNING` macros
