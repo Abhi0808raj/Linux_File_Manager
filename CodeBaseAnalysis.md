@@ -452,7 +452,7 @@ CMakeLists.txt (root)
 - [x] Configure log file path using `QStandardPaths::AppDataLocation`
 
 #### 1.4 Route FileSystem through ErrorHandler
-- [ ] Replace all `std::cerr` calls in `file_system.cpp` with `FM_ERROR` / `FM_WARNING` macros
+- [] Replace all `std::cerr` calls in `file_system.cpp` with `FM_ERROR` / `FM_WARNING` macros
 
 #### 1.5 Expand Tests (Unit + Integration)
 - [ ] Choose and add a testing framework (GoogleTest or Catch2) to CMake

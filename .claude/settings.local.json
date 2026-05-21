@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(grep -v \"\\\\.cpp$\")",
-      "Bash(git -C /media/NewVolume1/Coding/Projects/Linux_File_Manager log --oneline -20)"
+      "Bash(git -C /media/NewVolume1/Coding/Projects/Linux_File_Manager log --oneline -20)",
+      "Bash(mkdir -p /media/NewVolume1/Coding/Projects/Linux_File_Manager/docs/superpowers/plans)",
+      "Bash(git -C /media/NewVolume1/Coding/Projects/Linux_File_Manager log --oneline -3)",
+      "Bash(cmake .. -DCMAKE_BUILD_TYPE=Debug)",
+      "Bash(cmake .. -DCMAKE_BUILD_TYPE=Debug -DTEST_LOGGER_ONLY=OFF -DTEST_PLUGIN_MANAGER_ONLY=OFF -DTEST_FILE_SYSTEM_ONLY=OFF -DTEST_ERROR_HANDLER_ONLY=OFF)",
+      "Bash(cmake --build /media/NewVolume1/Coding/Projects/Linux_File_Manager/build --parallel)"
+    ],
+    "additionalDirectories": [
+      "/media/NewVolume1/Coding/Projects/Linux_File_Manager/docs/superpowers"
     ]
   }
 }
