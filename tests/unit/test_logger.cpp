@@ -37,23 +37,30 @@ protected:
 
 TEST_F(LoggerTest, InfoLabelAppearsInLog) {
     { Logger logger(logPath.string()); logger.log(ErrorSeverity::INFO, "info_msg"); }
-    EXPECT_NE(readLog().find("[INFO]"), std::string::npos);
-    EXPECT_NE(readLog().find("info_msg"), std::string::npos);
+    std::string content = readLog();
+    EXPECT_NE(content.find("[INFO]"), std::string::npos);
+    EXPECT_NE(content.find("info_msg"), std::string::npos);
 }
 
 TEST_F(LoggerTest, WarningLabelAppearsInLog) {
     { Logger logger(logPath.string()); logger.log(ErrorSeverity::WARNING, "warn_msg"); }
-    EXPECT_NE(readLog().find("[WARNING]"), std::string::npos);
+    std::string content = readLog();
+    EXPECT_NE(content.find("[WARNING]"), std::string::npos);
+    EXPECT_NE(content.find("warn_msg"), std::string::npos);
 }
 
 TEST_F(LoggerTest, ErrorLabelAppearsInLog) {
     { Logger logger(logPath.string()); logger.log(ErrorSeverity::ERROR, "err_msg"); }
-    EXPECT_NE(readLog().find("[ERROR]"), std::string::npos);
+    std::string content = readLog();
+    EXPECT_NE(content.find("[ERROR]"), std::string::npos);
+    EXPECT_NE(content.find("err_msg"), std::string::npos);
 }
 
 TEST_F(LoggerTest, CriticalLabelAppearsInLog) {
     { Logger logger(logPath.string()); logger.log(ErrorSeverity::CRITICAL, "crit_msg"); }
-    EXPECT_NE(readLog().find("[CRITICAL]"), std::string::npos);
+    std::string content = readLog();
+    EXPECT_NE(content.find("[CRITICAL]"), std::string::npos);
+    EXPECT_NE(content.find("crit_msg"), std::string::npos);
 }
 
 // --- Timestamp ---
