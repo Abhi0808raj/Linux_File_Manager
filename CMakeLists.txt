@@ -130,6 +130,10 @@ message(STATUS "Qt version: ${Qt6_VERSION}")
 message(STATUS "Source directory: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "Binary directory: ${CMAKE_BINARY_DIR}")
 
+# GoogleTest-based tests with ctest integration
+enable_testing()
+add_subdirectory(tests)
+
 #Only for testing
 # --- Modular Testing ---
 option(TEST_PLUGIN_MANAGER_ONLY "Plugin Manager test only" OFF)
