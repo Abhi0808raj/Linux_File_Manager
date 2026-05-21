@@ -1,7 +1,3 @@
-#ifdef assert
-#  undef assert
-#endif
-
 #include <gtest/gtest.h>
 #include "core/plugin_manager.hpp"
 #include <filesystem>

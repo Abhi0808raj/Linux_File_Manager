@@ -1,7 +1,3 @@
-#ifdef assert
-#  undef assert
-#endif
-
 #include <gtest/gtest.h>
 #include "core/plugin_manager.hpp"
 #include "core/file_system.hpp"
@@ -48,9 +44,8 @@ TEST_F(CopyPluginIntegrationTest, ExecuteCopyCreatesDestinationWithCorrectConten
     {
         std::ofstream f(src, std::ios::binary);
         f.write("integration test payload", 24);
-        f.close();
-        ASSERT_TRUE(f.good()) << "Failed to create source file";
-    }
+        ASSERT_TRUE(f.good()) << "Failed to write source file";
+    }  // f closes here via RAII
 
     auto* plugin = manager.getPluginByName("Copy Plugin");
     ASSERT_NE(plugin, nullptr);
