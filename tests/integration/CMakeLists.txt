@@ -1,9 +1,5 @@
-set(PLUGIN_BUILD_DIR "${CMAKE_BINARY_DIR}/plugins")
-
+# add_test (not gtest_discover_tests): copy_plugin.so must exist at test run time.
 add_executable(test_copy_plugin_integration test_copy_plugin.cpp)
-target_include_directories(test_copy_plugin_integration PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-)
 target_link_libraries(test_copy_plugin_integration PRIVATE
     file_manager_core GTest::gtest_main dl
 )
