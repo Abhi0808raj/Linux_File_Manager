@@ -73,6 +73,8 @@ TEST_F(PluginManagerTest, EmptyDirectoryTraversesWithZeroPlugins) {
 }
 
 TEST_F(PluginManagerTest, NonexistentDirectoryReturnsFalse) {
-    EXPECT_FALSE(manager.loadPlugins("/no/such/plugin/path/exists"));
+    // Use a path under tmpDir that was never created — guaranteed absent
+    fs::path missing = tmpDir / "nonexistent_subdir";
+    EXPECT_FALSE(manager.loadPlugins(missing.string()));
     EXPECT_EQ(manager.pluginCount(), 0u);
 }
