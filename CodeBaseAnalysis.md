@@ -466,7 +466,7 @@ CMakeLists.txt (root)
 
 #### 1.6 Replace Placeholders
 - [x] Replace `"Your Company"` / `"yourcompany"` in `main.cpp` and `metadata.json` files
-- [ ] Fill in `example_plugin` with a real `.cpp` source file or document it as a template
+- [x] Fill in `example_plugin` with a real `.cpp` source file or document it as a template
 
 ---
 
