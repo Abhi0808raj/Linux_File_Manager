@@ -19,6 +19,8 @@
 #include "example_plugin.hpp"
 
 #include <sys/stat.h>   // stat, S_IS* macros
+#include <cerrno>       // errno
+#include <cstring>      // std::strerror
 #include <ctime>        // strftime, localtime
 #include <iomanip>      // std::setw
 #include <iostream>
