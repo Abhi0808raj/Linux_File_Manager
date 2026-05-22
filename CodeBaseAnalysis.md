@@ -452,20 +452,20 @@ CMakeLists.txt (root)
 - [x] Configure log file path using `QStandardPaths::AppDataLocation`
 
 #### 1.4 Route FileSystem through ErrorHandler
-- [] Replace all `std::cerr` calls in `file_system.cpp` with `FM_ERROR` / `FM_WARNING` macros
+- [x] Replace all `std::cerr` calls in `file_system.cpp` with `FM_ERROR` / `FM_WARNING` macros
 
 #### 1.5 Expand Tests (Unit + Integration)
-- [ ] Choose and add a testing framework (GoogleTest or Catch2) to CMake
-- [ ] Unit tests for `FileSystem`: copy, move, delete, createDirectory (nested), edge cases
-- [ ] Unit tests for `ErrorHandler`: `Result<T>`, `safeExecute`, exception types
-- [ ] Unit tests for `Logger`: thread-safe concurrent writes, severity labels, timestamps
-- [ ] Unit tests for `PluginManager`: load valid plugin, reject invalid `.so`, name lookup
-- [ ] Integration test: load `copy_plugin.so` → call `execute()` → verify file copied on disk
-- [ ] Set up CMake `enable_testing()` and `ctest` integration
-- [ ] Set up GitHub Actions CI (Linux build + test on every push)
+- [x] Choose and add a testing framework (GoogleTest or Catch2) to CMake
+- [x] Unit tests for `FileSystem`: copy, move, delete, createDirectory (nested), edge cases
+- [x] Unit tests for `ErrorHandler`: `Result<T>`, `safeExecute`, exception types
+- [x] Unit tests for `Logger`: thread-safe concurrent writes, severity labels, timestamps
+- [x] Unit tests for `PluginManager`: load valid plugin, reject invalid `.so`, name lookup
+- [x] Integration test: load `copy_plugin.so` → call `execute()` → verify file copied on disk
+- [x] Set up CMake `enable_testing()` and `ctest` integration
+- [x] Set up GitHub Actions CI (Linux build + test on every push)
 
 #### 1.6 Replace Placeholders
-- [ ] Replace `"Your Company"` / `"yourcompany"` in `main.cpp` and `metadata.json` files
+- [x] Replace `"Your Company"` / `"yourcompany"` in `main.cpp` and `metadata.json` files
 - [ ] Fill in `example_plugin` with a real `.cpp` source file or document it as a template
 
 ---

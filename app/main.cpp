@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
     // Set application properties
     app.setApplicationName("File Manager");
     app.setApplicationVersion("1.0");
-    app.setOrganizationName("Your Company");
+    app.setOrganizationName("Abhi0808raj");
 
     // Load and apply the modern stylesheet
     QFile styleFile(":/stylesheet.qss");
