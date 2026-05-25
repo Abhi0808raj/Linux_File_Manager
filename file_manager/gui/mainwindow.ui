@@ -174,35 +174,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QTableView" name="fileTableView">
-          <property name="font">
-           <font>
-            <family>Segoe UI</family>
-            <pointsize>9</pointsize>
-           </font>
-          </property>
-          <property name="alternatingRowColors">
-           <bool>true</bool>
-          </property>
-          <property name="selectionBehavior">
-           <enum>QAbstractItemView::SelectRows</enum>
-          </property>
-          <property name="sortingEnabled">
-           <bool>true</bool>
-          </property>
-          <property name="showGrid">
-           <bool>false</bool>
-          </property>
-          <attribute name="horizontalHeaderVisible">
-           <bool>true</bool>
-          </attribute>
-          <attribute name="horizontalHeaderStretchLastSection">
-           <bool>true</bool>
-          </attribute>
-          <attribute name="verticalHeaderVisible">
-           <bool>false</bool>
-          </attribute>
-         </widget>
+         <widget class="FileView" name="fileView" native="true"/>
         </item>
        </layout>
       </widget>
@@ -337,5 +309,13 @@
  <resources>
   <include location="resources.qrc"/>
  </resources>
+ <customwidgets>
+  <customwidget>
+   <class>FileView</class>
+   <extends>QWidget</extends>
+   <header>gui/file_view.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <connections/>
 </ui>

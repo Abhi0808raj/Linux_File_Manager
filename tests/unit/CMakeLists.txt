@@ -20,3 +20,16 @@ target_link_libraries(test_plugin_manager PRIVATE file_manager_core GTest::gtest
 target_compile_definitions(test_plugin_manager PRIVATE PLUGIN_BUILD_DIR="${PLUGIN_BUILD_DIR}")
 add_dependencies(test_plugin_manager copy_plugin move_plugin delete_plugin)
 add_test(NAME PluginManagerTests COMMAND test_plugin_manager)
+
+# FileView unit + property-based tests (RapidCheck + GoogleTest)
+# Source file created in task 8.2.
+add_executable(test_file_view test_file_view.cpp)
+target_link_libraries(test_file_view
+    PRIVATE
+        file_manager_core
+        GTest::gtest_main
+        rapidcheck
+        rapidcheck_gtest
+        Qt6::Test
+)
+gtest_discover_tests(test_file_view)

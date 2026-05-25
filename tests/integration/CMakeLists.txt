@@ -8,3 +8,14 @@ target_compile_definitions(test_copy_plugin_integration PRIVATE
 )
 add_dependencies(test_copy_plugin_integration copy_plugin)
 add_test(NAME CopyPluginIntegration COMMAND test_copy_plugin_integration)
+
+# FileView <-> MainWindow integration tests.
+# Requires Qt6::Widgets and Qt6::Test (for QSignalSpy). file_manager_core
+# already exports Qt6::Widgets transitively, but Qt6::Test is test-only.
+add_executable(test_file_view_integration test_file_view_integration.cpp)
+target_link_libraries(test_file_view_integration PRIVATE
+    file_manager_core
+    GTest::gtest_main
+    Qt6::Test
+)
+gtest_discover_tests(test_file_view_integration)

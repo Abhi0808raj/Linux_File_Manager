@@ -62,6 +62,7 @@ Makefile
 *.includes
 *.cbp
 .DS_Store
+.kiro/
 
 # Logs
 *.log
