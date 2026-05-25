@@ -1,7 +1,7 @@
 # Codebase Analysis & Production Roadmap
 ## Qt C++ Cross-Platform File Manager
 
-> **Document Date:** 2026-05-19
+> **Document Date:** 2026-05-25 (Phase 1 complete)
 > **Analyzed Revision:** `4b0702b` (branch: `main`)
 > **Analyst:** Claude Code (Sonnet 4.6)
 > **Target Platforms:** Linux · Windows · macOS
@@ -33,42 +33,41 @@ This project is a **Qt6/C++17 cross-platform file manager** with a plugin archit
 | Directory listing via `QFileSystemModel` | Working |
 | Double-click to open directories and files | Working |
 | Status bar (file/dir count) | Working |
-| `FileSystem` class (copy, move, delete, read/write, metadata) | Working |
-| Plugin loader (dynamic `.so` / `.dll` loading) | Working |
+| `FileSystem` class (copy, move, delete, read/write, metadata) | Working (bugs fixed) |
+| Plugin loader (dynamic `.so` / `.dll` loading) | Working (thread-safe) |
 | Copy, Move, Delete plugins | Working (in isolation) |
-| Error handler with typed exceptions and `Result<T>` | Working |
-| Thread-safe logger with timestamps | Working |
-| CMake build system with modular test flags | Working |
+| Error handler with typed exceptions and `Result<T>` | Working (bugs fixed) |
+| Thread-safe logger with timestamps | Working (cross-platform safe) |
+| Logger ↔ ErrorHandler integration | Working |
+| CMake build system with modular test flags | Working (cleaned up) |
 | Modern light stylesheet (Google Material-inspired) | Working |
+| Unit & integration test suite (GoogleTest/Catch2) | Working |
+| GitHub Actions CI (Linux build + test) | Working |
 
 ### What Is Broken or Missing
 
 - **GUI and plugin system are completely disconnected.** No user action in the UI invokes any plugin or `FileSystem` operation. The app can browse directories but cannot perform any file operation through the interface.
 - **`FileView` is a placeholder.** The class exists but contains only a label widget — it is not used in the main window.
-- **`error_handler.hpp` has duplicate method declarations** (`warning`, `critical`) that will cause compile errors in strict mode.
-- **`Logger` and `ErrorHandler` are not connected.** The logger writes to a file; the error handler writes to `stderr`. They are independent and cannot be configured together.
-- **`test.cpp` is empty** and is compiled into the core library, polluting the build.
 - **Sidebar navigation is fully hardcoded** — only Home, Desktop, Downloads, Bookmarks, and Filesystem are supported, with no dynamic drives or bookmarks.
 - **No right-click context menu** of any kind.
 - **No rename, new folder, delete, or cut/copy/paste** from the UI.
 - **No search functionality.**
 - **No file icons** per file type in the table view.
 - **No undo/redo** for any operation.
-- **Vendor/company metadata is placeholder** (`"Your Company"`, `"yourcompany"`).
-- **No CI/CD pipeline, no release packaging.**
+- **No release packaging.**
 
 ### Production Readiness Score
 
 ```
-Overall:  ~22% toward a deployable v1.0
-  Core Logic:        ████████░░░░░░░░  50%
+Overall:  ~40% toward a deployable v1.0
+  Core Logic:        ████████████░░░░  75%
   GUI / UX:          ████░░░░░░░░░░░░  25%
   Plugin Integration: ██░░░░░░░░░░░░░░  10%
-  Testing:           ███░░░░░░░░░░░░░  15%
+  Testing:           ██████████░░░░░░  60%
   Packaging/Release: ░░░░░░░░░░░░░░░░   0%
 ```
 
-The foundation is genuinely well-designed. The architecture decisions (plugin interface, `Result<T>` wrapper, static `FileSystem` utility, clean header/source separation) are professional-grade. The path to v1.0 is clear, but significant work remains.
+The foundation is solid and stable. Phase 1 resolved all critical and major bugs, connected the logging infrastructure, established a comprehensive test suite, and set up CI. The core logic layer is now production-quality. The path to v1.0 requires wiring the GUI to the core layer (Phase 2), integrating plugins end-to-end (Phase 3), and packaging for distribution (Phase 4).
 
 ---
 
@@ -106,7 +105,7 @@ The foundation is genuinely well-designed. The architecture decisions (plugin in
 
 ### Current Reality
 
-The GUI layer has **zero wiring** to the Core layer. `MainWindow` only uses `QFileSystemModel` (Qt's built-in) and `QDir` for display. `FileSystem`, `PluginManager`, and all plugins are compiled but never instantiated from the UI.
+The GUI layer has **zero wiring** to the Core layer. `MainWindow` only uses `QFileSystemModel` (Qt's built-in) and `QDir` for display. `FileSystem`, `PluginManager`, and all plugins are compiled but never instantiated from the UI. However, the core layer is now stable, tested, and correctly integrated internally (Logger ↔ ErrorHandler ↔ FileSystem).
 
 ### Build System Structure
 
@@ -128,7 +127,7 @@ CMakeLists.txt (root)
 └── tests/  (4 independent test targets, flag-gated)
 ```
 
-**Build issue:** `file_manager/core/test.cpp` (empty file) is included in `CORE_SOURCES` via `GLOB_RECURSE` and compiled into `file_manager_core`. This is unintentional.
+**Build issue:** ~~`file_manager/core/test.cpp` (empty file) is included in `CORE_SOURCES` via `GLOB_RECURSE` and compiled into `file_manager_core`. This is unintentional.~~ **Resolved in Phase 1** — test file removed, tests moved to dedicated `tests/` directory.
 
 ---
 
@@ -146,13 +145,13 @@ CMakeLists.txt (root)
 
 **Issues:**
 
-| File | Line | Issue |
-|---|---|---|
-| `file_system.cpp` | 49 | `fs::create_directory(path, ec) > 0` — `create_directory` returns `bool`, not a count. This comparison works but is semantically wrong and will cause a compiler warning. Should be `fs::create_directories(path, ec)` (note plural) to support nested paths. |
-| `file_system.cpp` | 35–38 | Errors in `listDirectory` are printed to `std::cerr` directly, bypassing the `ErrorHandler`. |
-| `file_system.cpp` | All | All error paths print to `std::cerr` directly instead of routing through `FM_ERROR` / `FM_WARNING` macros. |
-| `file_system.hpp` | — | No support for symlinks, hidden files filter, or permissions querying — all needed for a production file manager. |
-| `file_system.cpp` | 71–84 | `copy` does not handle directory-recursive copying. `fs::copy` with `copy_options::none` will fail silently on directories unless `copy_options::recursive` is added. |
+| File | Line | Issue | Status |
+|---|---|---|---|
+| `file_system.cpp` | 49 | `fs::create_directory(path, ec) > 0` — should be `fs::create_directories` for nested paths. | **Fixed** |
+| `file_system.cpp` | 35–38 | Errors in `listDirectory` printed to `std::cerr` directly, bypassing `ErrorHandler`. | **Fixed** |
+| `file_system.cpp` | All | All error paths printed to `std::cerr` directly instead of routing through `FM_ERROR` / `FM_WARNING` macros. | **Fixed** |
+| `file_system.hpp` | — | No support for symlinks, hidden files filter, or permissions querying — all needed for a production file manager. | Open (Phase 2) |
+| `file_system.cpp` | 71–84 | `copy` did not handle directory-recursive copying. | **Fixed** |
 
 ---
 
@@ -169,13 +168,13 @@ CMakeLists.txt (root)
 
 **Issues:**
 
-| File | Line | Issue |
-|---|---|---|
-| `plugin_manager.cpp` | 47–57 | `plugins()` returns a reference to a `static` local vector. This is not thread-safe — concurrent calls will race on `pluginPtrs.clear()`. Should return by value or use a member vector. |
-| `plugin_manager.cpp` | — | No version compatibility check. A plugin built against an older `IFileManagerPlugin` ABI will crash at runtime with no useful error. |
-| `plugin_manager.hpp` | — | No `reloadPlugin(name)` method — needed for development and future hot-reload support. |
-| `plugin_manager.cpp` | — | Plugin directory path is hardcoded at call sites. Should have a configurable default (e.g., next to the executable). |
-| Root `CMakeLists.txt` | 94–97 | Plugins are built to `${CMAKE_BINARY_DIR}/plugins/` but `PluginManager::loadPlugins()` is never called with this path from `main.cpp`. The plugins exist but are never loaded at runtime. |
+| File | Line | Issue | Status |
+|---|---|---|---|
+| `plugin_manager.cpp` | 47–57 | `plugins()` returned a reference to a `static` local vector — data race under concurrent access. | **Fixed** |
+| `plugin_manager.cpp` | — | No version compatibility check. A plugin built against an older `IFileManagerPlugin` ABI will crash at runtime with no useful error. | Open (Phase 3) |
+| `plugin_manager.hpp` | — | No `reloadPlugin(name)` method — needed for development and future hot-reload support. | Open (Phase 3) |
+| `plugin_manager.cpp` | — | Plugin directory path is hardcoded at call sites. Should have a configurable default (e.g., next to the executable). | Open (Phase 3) |
+| Root `CMakeLists.txt` | 94–97 | Plugins are built to `${CMAKE_BINARY_DIR}/plugins/` but `PluginManager::loadPlugins()` is never called with this path from `main.cpp`. | Open (Phase 3) |
 
 ---
 
@@ -192,13 +191,13 @@ CMakeLists.txt (root)
 
 **Issues:**
 
-| File | Line | Issue |
-|---|---|---|
-| `error_handler.hpp` | 177–180 | `warning(const TArgs&... args)` declared twice — once as a non-forwarding template (line 177) and once as a forwarding-reference template (line 204). This is a **redefinition error** that will fail to compile with certain compilers or ODR-checking tools. |
-| `error_handler.hpp` | 185–189 | `critical(const TArgs&... args)` declared twice — same issue. The second `critical` (line 214) calls `critical(format(...))` which calls itself — **infinite recursion**. |
-| `error_handler.hpp` | 199–201 | `info()` routes through `logError(ErrorSeverity::WARNING, ...)` — an INFO-level message is incorrectly logged as WARNING severity. Needs an `INFO` entry in the `ErrorSeverity` enum. |
-| `error_handler.cpp` | 64–80 | `logError` writes only to `std::cerr` and an optional callback. It does not write to the `Logger`. The two systems are completely decoupled. |
-| `error_handler.hpp` | 99–108 | `ErrorCode` enum is defined but `OUT_OF_MEMORY` and `GUI_LOAD_FAILED` are never used anywhere in the codebase. |
+| File | Line | Issue | Status |
+|---|---|---|---|
+| `error_handler.hpp` | 177–180 | `warning()` declared twice — redefinition error. | **Fixed** |
+| `error_handler.hpp` | 185–189 | `critical()` declared twice — infinite recursion and stack overflow. | **Fixed** |
+| `error_handler.hpp` | 199–201 | `info()` routed through `ErrorSeverity::WARNING` — incorrect severity. | **Fixed** |
+| `error_handler.cpp` | 64–80 | `logError` wrote only to `std::cerr` — not connected to `Logger`. | **Fixed** |
+| `error_handler.hpp` | 99–108 | `ErrorCode` enum: `OUT_OF_MEMORY` and `GUI_LOAD_FAILED` never used. | Open (low priority) |
 
 ---
 
@@ -214,13 +213,13 @@ CMakeLists.txt (root)
 
 **Issues:**
 
-| File | Line | Issue |
-|---|---|---|
-| `logger.hpp` | — | `Logger` is never instantiated anywhere in the running application. It exists but is unused at runtime. |
-| `logger.hpp` | — | No `INFO` severity level — the `ErrorSeverity` enum used by Logger only has `WARNING`, `ERROR`, `CRITICAL`. Normal operations cannot be logged. |
-| `logger.cpp` | 33 | `std::localtime` is not thread-safe on all platforms. Should use `localtime_r` (POSIX) or `localtime_s` (Windows) for a cross-platform solution. |
-| `logger.hpp` | — | Log file path defaults to `"file_manager.log"` — now resolved to predictable platform-appropriate location (`QStandardPaths::AppDataLocation`) at launch for relative paths. |
-| `logger.hpp` | — | No log rotation — a long-running instance will grow the log file indefinitely. |
+| File | Line | Issue | Status |
+|---|---|---|---|
+| `logger.hpp` | — | `Logger` was never instantiated anywhere in the running application. | **Fixed** (connected to ErrorHandler) |
+| `logger.hpp` | — | No `INFO` severity level. | **Fixed** |
+| `logger.cpp` | 33 | `std::localtime` is not thread-safe on all platforms. | **Fixed** (uses `localtime_r`/`localtime_s`) |
+| `logger.hpp` | — | Log file path defaults to `"file_manager.log"` — now resolved via `QStandardPaths::AppDataLocation`. | **Fixed** |
+| `logger.hpp` | — | No log rotation — a long-running instance will grow the log file indefinitely. | Open (low priority) |
 
 ---
 
@@ -315,11 +314,11 @@ CMakeLists.txt (root)
 
 ### What Needs to Happen for All Three Platforms
 
-1. Replace `std::localtime` with a thread-safe cross-platform wrapper in `logger.cpp`.
-2. Add a platform-appropriate default log file path (using `QStandardPaths`).
+1. ~~Replace `std::localtime` with a thread-safe cross-platform wrapper in `logger.cpp`.~~ **Done**
+2. ~~Add a platform-appropriate default log file path (using `QStandardPaths`).~~ **Done**
 3. Add platform-appropriate plugin search path (next to executable, or `~/.config/file_manager/plugins/`).
 4. Add CMake install targets for each platform (already started but incomplete).
-5. Set up GitHub Actions CI with Linux, Windows, and macOS build matrix.
+5. ~~Set up GitHub Actions CI with Linux, Windows, and macOS build matrix.~~ **Partially done** (Linux CI active; Windows/macOS to be added in Phase 4).
 
 ---
 
@@ -327,35 +326,39 @@ CMakeLists.txt (root)
 
 ### Critical (Will cause crashes or compile failures)
 
-| # | File | Description |
-|---|---|---|
-| C1 | `error_handler.hpp:177,204` | `warning()` defined twice — redefinition. Will fail to compile with ODR-checking or MSVC. |
-| C2 | `error_handler.hpp:185,214` | `critical()` defined twice. The second overload calls itself via `critical(format(...))` — **infinite recursion and stack overflow at runtime**. |
-| C3 | `plugin_manager.cpp:47` | `plugins()` returns a reference to a `static` local vector — **data race** under concurrent access. |
+| # | File | Description | Status |
+|---|---|---|---|
+| ~~C1~~ | ~~`error_handler.hpp:177,204`~~ | ~~`warning()` defined twice — redefinition.~~ | **Fixed** |
+| ~~C2~~ | ~~`error_handler.hpp:185,214`~~ | ~~`critical()` defined twice — infinite recursion.~~ | **Fixed** |
+| ~~C3~~ | ~~`plugin_manager.cpp:47`~~ | ~~`plugins()` returns a reference to a `static` local vector — data race.~~ | **Fixed** |
+
+**No remaining critical bugs.**
 
 ### Major (Wrong behavior, silent failures)
 
-| # | File | Description |
-|---|---|---|
-| M1 | `file_system.cpp:49` | `fs::create_directory` (singular) used instead of `fs::create_directories` — creating nested paths (e.g., `a/b/c`) silently fails if parent doesn't exist. |
-| M2 | `file_system.cpp:71` | `FileSystem::copy` does not pass `copy_options::recursive` — copying directories silently fails. |
-| M3 | `error_handler.hpp:199` | `info()` logs at `WARNING` severity — INFO messages appear as warnings in the log. |
-| M4 | `logger.cpp:33` | `std::localtime` is not thread-safe on Linux/macOS — concurrent logging can produce garbled timestamps or crash. |
-| M5 | `CMakeLists.txt:33-35` | `GLOB_RECURSE` on `file_manager/core/` picks up `test.cpp` (empty file) and compiles it into `file_manager_core` — pollutes the production library with test code. |
+| # | File | Description | Status |
+|---|---|---|---|
+| ~~M1~~ | ~~`file_system.cpp:49`~~ | ~~`fs::create_directory` (singular) — nested paths silently fail.~~ | **Fixed** |
+| ~~M2~~ | ~~`file_system.cpp:71`~~ | ~~`FileSystem::copy` does not pass `copy_options::recursive`.~~ | **Fixed** |
+| ~~M3~~ | ~~`error_handler.hpp:199`~~ | ~~`info()` logs at `WARNING` severity.~~ | **Fixed** |
+| ~~M4~~ | ~~`logger.cpp:33`~~ | ~~`std::localtime` is not thread-safe on Linux/macOS.~~ | **Fixed** |
+| ~~M5~~ | ~~`CMakeLists.txt:33-35`~~ | ~~`GLOB_RECURSE` picks up `test.cpp` — pollutes production library.~~ | **Fixed** |
+
+**No remaining major bugs.**
 
 ### Minor (Code quality, warnings, maintainability)
 
-| # | File | Description |
-|---|---|---|
-| m1 | `main_window.cpp:108` | Mixed signed/unsigned comparison (`int` vs `qsizetype`) — compiler warning. |
-| m2 | `main_window.cpp:173` | Sidebar location matching by string comparison — fragile, breaks if UI labels change. Use an enum or `QVariant` data on tree items. |
-| m3 | `app/main.cpp:13` | `"Your Company"` placeholder left in `setOrganizationName`. |
-| m4 | `plugins/*/metadata.json` | All metadata files contain placeholder vendor information. |
-| m5 | `file_system.cpp:all` | All error paths bypass `ErrorHandler` and write directly to `std::cerr`. |
-| m6 | `error_handler.hpp:99` | `OUT_OF_MEMORY`, `GUI_LOAD_FAILED` error codes defined but never used. |
-| m7 | `include/core/file_system.hpp:all` | Excessive inline comments explaining standard library basics — appropriate for learning, should be reduced before public release. |
-| m8 | `file_manager/gui/file_view.cpp` | Entirely placeholder — stub widget with a label. |
-| m9 | Root `CMakeLists.txt` | Two separate build directories exist (`build/` and `cmake-build-debug/`) — should be one. Add both to `.gitignore`. |
+| # | File | Description | Status |
+|---|---|---|---|
+| m1 | `main_window.cpp:108` | Mixed signed/unsigned comparison (`int` vs `qsizetype`) — compiler warning. | Open |
+| m2 | `main_window.cpp:173` | Sidebar location matching by string comparison — fragile. | Open (Phase 2.7) |
+| ~~m3~~ | ~~`app/main.cpp:13`~~ | ~~`"Your Company"` placeholder.~~ | **Fixed** |
+| ~~m4~~ | ~~`plugins/*/metadata.json`~~ | ~~Placeholder vendor information.~~ | **Fixed** |
+| ~~m5~~ | ~~`file_system.cpp:all`~~ | ~~Error paths bypass `ErrorHandler`.~~ | **Fixed** |
+| m6 | `error_handler.hpp:99` | `OUT_OF_MEMORY`, `GUI_LOAD_FAILED` error codes defined but never used. | Open (low priority) |
+| m7 | `include/core/file_system.hpp:all` | Excessive inline comments — should be reduced before public release. | Open (low priority) |
+| m8 | `file_manager/gui/file_view.cpp` | Entirely placeholder — stub widget with a label. | Open (Phase 2.1) |
+| ~~m9~~ | ~~Root `CMakeLists.txt`~~ | ~~Two separate build directories; `.gitignore` incomplete.~~ | **Fixed** |
 
 ---
 
@@ -400,13 +403,15 @@ CMakeLists.txt (root)
 
 | Feature | Status |
 |---|---|
-| Unit tests for FileSystem | Framework exists, needs expansion |
-| Unit tests for PluginManager | Framework exists, needs expansion |
-| Unit tests for ErrorHandler | Framework exists, needs expansion |
+| Unit tests for FileSystem | Done |
+| Unit tests for PluginManager | Done |
+| Unit tests for ErrorHandler | Done |
+| Unit tests for Logger | Done |
 | Integration tests (GUI + core) | Not implemented |
-| No known crash-level bugs | Failing (C1, C2, C3 above) |
-| ErrorHandler + Logger connected | Not connected |
-| Thread-safe logging | Partial (mutex present, localtime unsafe) |
+| No known crash-level bugs | Passing |
+| ErrorHandler + Logger connected | Done |
+| Thread-safe logging | Done |
+| CI pipeline (GitHub Actions) | Done (Linux) |
 
 ### Packaging & Distribution
 
@@ -427,9 +432,10 @@ CMakeLists.txt (root)
 
 ## 7. Phased Roadmap
 
-### Phase 1 — Stability & Quality
+### Phase 1 — Stability & Quality ✅ COMPLETE
 **Goal:** A crash-free, correctly-behaving codebase with a solid test foundation. No new features until this is done.
 **Estimated scope:** 2–3 weeks
+**Completed:** 2026-05-25
 
 #### 1.1 Fix Critical Bugs
 - [x] Fix duplicate `warning()` and `critical()` declarations in `error_handler.hpp` (remove the second, forwarding-ref overloads or merge them)
@@ -614,28 +620,30 @@ CMakeLists.txt (root)
 | Path | Purpose | Status |
 |---|---|---|
 | `app/main.cpp` | Entry point | Working |
-| `file_manager/core/file_system.cpp` | FileSystem implementation | Working (bugs) |
-| `file_manager/core/plugin_manager.cpp` | Plugin loader | Working (bugs) |
-| `file_manager/core/test.cpp` | Empty file | Removed |
+| `file_manager/core/file_system.cpp` | FileSystem implementation | Working (bugs fixed) |
+| `file_manager/core/plugin_manager.cpp` | Plugin loader | Working (thread-safe) |
+| ~~`file_manager/core/test.cpp`~~ | ~~Empty file~~ | Removed |
 | `file_manager/gui/main_window.cpp` | Main UI | Working (incomplete) |
 | `file_manager/gui/file_view.cpp` | File view widget | Stub |
-| `file_manager/utilities/error_handler.cpp` | Error handling | Working (bugs) |
-| `file_manager/utilities/logger.cpp` | File logger | Working (not used) |
+| `file_manager/utilities/error_handler.cpp` | Error handling | Working (bugs fixed) |
+| `file_manager/utilities/logger.cpp` | File logger | Working (connected to ErrorHandler) |
 | `include/core/file_system.hpp` | FileSystem API | Good |
 | `include/core/plugin_interface.hpp` | Plugin ABI | Good (needs versioning) |
 | `include/core/plugin_manager.hpp` | PluginManager API | Good |
 | `include/gui/main_window.hpp` | MainWindow header | Good |
 | `include/gui/file_view.hpp` | FileView header | Stub |
-| `include/utilities/error_handler.hpp` | Error handler API | Has critical bugs |
+| `include/utilities/error_handler.hpp` | Error handler API | Good (bugs fixed) |
 | `include/utilities/logger.hpp` | Logger API | Good |
 | `plugins/basic_operations/src/copy_plugin.cpp` | Copy plugin | Working |
 | `plugins/basic_operations/src/move_plugin.cpp` | Move plugin | Working |
 | `plugins/basic_operations/src/delete_plugin.cpp` | Delete plugin | Working |
-| `plugins/example_plugin/src/example_plugin.cpp` | Example plugin source | File does not exist — header only |
+| `plugins/example_plugin/src/example_plugin.cpp` | Example plugin source | Documented as template |
 | `resources/stylesheet.qss` | UI stylesheet | Good |
 | `resources/resources.qrc` | Qt resource bundle | Working |
-| `CMakeLists.txt` | Build system | Working (issues) |
+| `CMakeLists.txt` | Build system | Working (cleaned up) |
 | `cmake/PluginConfig.cmake` | Plugin build macro | Working |
+| `tests/` | Unit & integration tests | Working (GoogleTest) |
+| `.github/workflows/ci.yml` | GitHub Actions CI | Working (Linux) |
 | `README.md` | Project documentation | Good start |
 
 ---
