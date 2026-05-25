@@ -6,9 +6,17 @@
 #include <QModelIndex>
 #include <QStackedWidget>
 #include <QString>
+#include <QStringList>
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QWidget>
+
+#include "gui/clipboard_manager.hpp"
+#include "gui/cut_state_proxy_model.hpp"
+
+class QMenu;
+class QAction;
+class QAbstractItemView;
 
 enum class ViewMode { Table, List };
 
@@ -78,4 +86,40 @@ private:
 private slots:
     void onItemActivated(const QModelIndex& index);
     void onDirectoryLoaded(const QString& path);
+
+    // Context-menu action slots (Req 1.3, 1.5)
+    void onContextMenuRequested(const QPoint& pos);
+    void onOpen();
+    void onOpenWith();
+    void onCopy();
+    void onCut();
+    void onPaste();
+    void onRename();
+    void onDelete();
+    void onNewFolder();
+    void onProperties();
+
+private:
+    // --- Context-menu helpers ---
+    QStringList selectedPaths() const;
+    bool        currentPathIsWritable() const;
+    QAbstractItemView* activeView() const;
+    void resolveSelectionForContextMenu(const QPoint& pos);
+    void updateActionStates();
+
+    // --- Context-menu state (Req 12.1) ---
+    ClipboardManager    clipboard_;
+    CutStateProxyModel* proxy_       = nullptr;   // owned; wraps model_
+    QMenu*              contextMenu_ = nullptr;   // owned; built once
+
+    // QAction* — created once, reused; only enabled state mutates per show
+    QAction* actOpen_       = nullptr;
+    QAction* actOpenWith_   = nullptr;
+    QAction* actCopy_       = nullptr;
+    QAction* actCut_        = nullptr;
+    QAction* actPaste_      = nullptr;
+    QAction* actRename_     = nullptr;
+    QAction* actDelete_     = nullptr;
+    QAction* actNewFolder_  = nullptr;
+    QAction* actProperties_ = nullptr;
 };

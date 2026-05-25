@@ -33,3 +33,49 @@ target_link_libraries(test_file_view
         Qt6::Test
 )
 gtest_discover_tests(test_file_view)
+
+# ClipboardManager unit + property-based tests (RapidCheck + GoogleTest)
+add_executable(test_clipboard_manager test_clipboard_manager.cpp)
+target_link_libraries(test_clipboard_manager
+    PRIVATE
+        file_manager_core
+        GTest::gtest_main
+        rapidcheck
+        rapidcheck_gtest
+)
+gtest_discover_tests(test_clipboard_manager)
+
+# ContextMenuActionState unit + property-based tests (RapidCheck + GoogleTest)
+add_executable(test_context_menu_action_state test_context_menu_action_state.cpp)
+target_link_libraries(test_context_menu_action_state
+    PRIVATE
+        file_manager_core
+        GTest::gtest_main
+        rapidcheck
+        rapidcheck_gtest
+)
+gtest_discover_tests(test_context_menu_action_state)
+
+# CutStateProxyModel unit + property-based tests (RapidCheck + GoogleTest)
+add_executable(test_cut_state_proxy_model test_cut_state_proxy_model.cpp)
+target_link_libraries(test_cut_state_proxy_model
+    PRIVATE
+        file_manager_core
+        GTest::gtest_main
+        rapidcheck
+        rapidcheck_gtest
+        Qt6::Test
+)
+gtest_discover_tests(test_cut_state_proxy_model)
+
+# PropertiesDialog unit + property-based tests (RapidCheck + GoogleTest)
+add_executable(test_properties_dialog test_properties_dialog.cpp)
+target_link_libraries(test_properties_dialog
+    PRIVATE
+        file_manager_core
+        GTest::gtest_main
+        rapidcheck
+        rapidcheck_gtest
+        Qt6::Test
+)
+gtest_discover_tests(test_properties_dialog)

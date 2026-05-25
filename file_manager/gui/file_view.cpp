@@ -1,10 +1,21 @@
 #include "gui/file_view.hpp"
 
+#include <QAction>
 #include <QDesktopServices>
 #include <QDir>
+#include <QFileInfo>
 #include <QHeaderView>
+#include <QInputDialog>
+#include <QItemSelectionModel>
+#include <QMenu>
+#include <QMessageBox>
 #include <QModelIndex>
+#include <QProcess>
 #include <QUrl>
+
+#include "core/file_system.hpp"
+#include "gui/context_menu_action_state.hpp"
+#include "gui/properties_dialog.hpp"
 
 FileView::FileView(QWidget* parent)
     : QWidget(parent)
@@ -14,12 +25,16 @@ FileView::FileView(QWidget* parent)
     model_->setRootPath(QString());
     model_->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden);
 
+    // --- Proxy (cut-state visual indicator) ---
+    proxy_ = new CutStateProxyModel(this);
+    proxy_->setSourceModel(model_);
+
     // --- Views ---
     tableView_ = new QTableView(this);
-    tableView_->setModel(model_);
+    tableView_->setModel(proxy_);
 
     listView_ = new QListView(this);
-    listView_->setModel(model_);
+    listView_->setModel(proxy_);
 
     // --- Stacked widget + layout ---
     stack_ = new QStackedWidget(this);
@@ -60,6 +75,52 @@ FileView::FileView(QWidget* parent)
     // --- Directory loaded → status signal ---
     connect(model_, &QFileSystemModel::directoryLoaded,
             this, &FileView::onDirectoryLoaded);
+
+    // --- Context menu (built once, reused per right-click) ---
+    contextMenu_ = new QMenu(this);
+
+    actOpen_       = new QAction(tr("Open"), this);
+    actOpenWith_   = new QAction(tr("Open With..."), this);
+    actCopy_       = new QAction(tr("Copy"), this);
+    actCut_        = new QAction(tr("Cut"), this);
+    actPaste_      = new QAction(tr("Paste"), this);
+    actRename_     = new QAction(tr("Rename"), this);
+    actDelete_     = new QAction(tr("Delete"), this);
+    actNewFolder_  = new QAction(tr("New Folder"), this);
+    actProperties_ = new QAction(tr("Properties"), this);
+
+    contextMenu_->addAction(actOpen_);
+    contextMenu_->addAction(actOpenWith_);
+    contextMenu_->addSeparator();
+    contextMenu_->addAction(actCopy_);
+    contextMenu_->addAction(actCut_);
+    contextMenu_->addAction(actPaste_);
+    contextMenu_->addSeparator();
+    contextMenu_->addAction(actRename_);
+    contextMenu_->addAction(actDelete_);
+    contextMenu_->addSeparator();
+    contextMenu_->addAction(actNewFolder_);
+    contextMenu_->addSeparator();
+    contextMenu_->addAction(actProperties_);
+
+    connect(actOpen_,       &QAction::triggered, this, &FileView::onOpen);
+    connect(actOpenWith_,   &QAction::triggered, this, &FileView::onOpenWith);
+    connect(actCopy_,       &QAction::triggered, this, &FileView::onCopy);
+    connect(actCut_,        &QAction::triggered, this, &FileView::onCut);
+    connect(actPaste_,      &QAction::triggered, this, &FileView::onPaste);
+    connect(actRename_,     &QAction::triggered, this, &FileView::onRename);
+    connect(actDelete_,     &QAction::triggered, this, &FileView::onDelete);
+    connect(actNewFolder_,  &QAction::triggered, this, &FileView::onNewFolder);
+    connect(actProperties_, &QAction::triggered, this, &FileView::onProperties);
+
+    // --- Context menu policy on both views ---
+    tableView_->setContextMenuPolicy(Qt::CustomContextMenu);
+    listView_->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(tableView_, &QWidget::customContextMenuRequested,
+            this, &FileView::onContextMenuRequested);
+    connect(listView_, &QWidget::customContextMenuRequested,
+            this, &FileView::onContextMenuRequested);
 }
 
 FileView::~FileView() = default;
@@ -77,9 +138,10 @@ void FileView::applyHistoryPosition(int newIndex)
     historyIndex_ = newIndex;
 
     const QString path = currentPath();
-    const QModelIndex root = model_->index(path);
-    tableView_->setRootIndex(root);
-    listView_->setRootIndex(root);
+    const QModelIndex sourceRoot = model_->index(path);
+    const QModelIndex proxyRoot = proxy_->mapFromSource(sourceRoot);
+    tableView_->setRootIndex(proxyRoot);
+    listView_->setRootIndex(proxyRoot);
 
     emit pathChanged(path);
 
@@ -193,9 +255,10 @@ void FileView::refresh()
     model_->setRootPath(path);
 
     // Re-set root indexes so the views display the freshly-reloaded data.
-    const QModelIndex root = model_->index(path);
-    tableView_->setRootIndex(root);
-    listView_->setRootIndex(root);
+    const QModelIndex sourceRoot = model_->index(path);
+    const QModelIndex proxyRoot = proxy_->mapFromSource(sourceRoot);
+    tableView_->setRootIndex(proxyRoot);
+    listView_->setRootIndex(proxyRoot);
 }
 
 // Double-click handler: navigate into directories or open files with the
@@ -205,10 +268,11 @@ void FileView::onItemActivated(const QModelIndex& index)
 {
     if (!index.isValid())
         return;
-    if (model_->isDir(index)) {
-        navigateTo(model_->filePath(index));
+    const QModelIndex sourceIdx = proxy_->mapToSource(index);
+    if (model_->isDir(sourceIdx)) {
+        navigateTo(model_->filePath(sourceIdx));
     } else {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(model_->filePath(index)));
+        QDesktopServices::openUrl(QUrl::fromLocalFile(model_->filePath(sourceIdx)));
     }
 }
 
@@ -229,4 +293,290 @@ void FileView::onDirectoryLoaded(const QString& path)
     }
 
     emit statusChanged(dirCount, fileCount);
+}
+
+// ---------------------------------------------------------------------------
+// Context-menu slot and helpers
+// (action handler bodies will be filled in by task 10)
+// ---------------------------------------------------------------------------
+
+void FileView::onContextMenuRequested(const QPoint& pos)
+{
+    resolveSelectionForContextMenu(pos);
+    updateActionStates();
+    contextMenu_->exec(activeView()->viewport()->mapToGlobal(pos));
+}
+
+void FileView::onOpen()
+{
+    const QStringList paths = selectedPaths();
+    if (paths.size() != 1)
+        return;
+
+    QString resolved = paths.first();
+    QFileInfo fi(resolved);
+    if (!fi.symLinkTarget().isEmpty())
+        resolved = fi.symLinkTarget();
+
+    QFileInfo resolvedInfo(resolved);
+    if (resolvedInfo.isDir()) {
+        navigateTo(resolved);
+    } else {
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(resolved))) {
+            QMessageBox::critical(this, tr("Open Failed"),
+                                  tr("Could not open '%1'.").arg(resolved));
+        }
+    }
+}
+
+void FileView::onOpenWith()
+{
+    const QStringList paths = selectedPaths();
+    if (paths.size() != 1)
+        return;
+
+    const QString path = paths.first();
+
+    // Try the platform application chooser via xdg-open
+    qint64 pid = 0;
+    if (QProcess::startDetached(QStringLiteral("xdg-open"), {path}, QString(), &pid)) {
+        return;  // launched successfully
+    }
+
+    // Fall back to asking the user for an application command
+    bool ok = false;
+    const QString command = QInputDialog::getText(
+        this, tr("Open With"),
+        tr("Enter application command:"),
+        QLineEdit::Normal, QString(), &ok);
+
+    if (!ok || command.trimmed().isEmpty())
+        return;  // cancelled or empty — no-op
+
+    if (!QProcess::startDetached(command.trimmed(), {path})) {
+        QMessageBox::critical(this, tr("Open With Failed"),
+                              tr("Could not launch application '%1'.").arg(command.trimmed()));
+    }
+}
+
+void FileView::onCopy()
+{
+    clipboard_.set(selectedPaths(), ClipboardOperation::Copy);
+    proxy_->clearCutPaths();
+}
+
+void FileView::onCut()
+{
+    const QStringList paths = selectedPaths();
+    clipboard_.set(paths, ClipboardOperation::Cut);
+    proxy_->setCutPaths(QSet<QString>(paths.begin(), paths.end()));
+}
+
+void FileView::onPaste()
+{
+    QStringList failures;
+    const QList<QString> sources = clipboard_.paths();
+    const ClipboardOperation op = clipboard_.operation();
+
+    for (const QString& src : sources) {
+        const QString dest = QDir(currentPath()).filePath(QFileInfo(src).fileName());
+        bool success = false;
+
+        if (op == ClipboardOperation::Copy) {
+            success = FileSystem::copy(src.toStdString(), dest.toStdString());
+        } else {
+            success = FileSystem::move(src.toStdString(), dest.toStdString());
+        }
+
+        if (!success) {
+            failures << QStringLiteral("%1 \u2192 %2").arg(src, dest);
+        }
+    }
+
+    if (op == ClipboardOperation::Cut) {
+        clipboard_.clear();
+        proxy_->clearCutPaths();
+    }
+
+    if (!failures.isEmpty()) {
+        QMessageBox::critical(this, tr("Paste Failed"),
+                              tr("The following items could not be pasted:\n%1")
+                                  .arg(failures.join(QLatin1Char('\n'))));
+    }
+
+    refresh();
+}
+
+void FileView::onRename()
+{
+    const QStringList paths = selectedPaths();
+    if (paths.size() != 1)
+        return;
+
+    const QString path = paths.first();
+    const QString oldName = QFileInfo(path).fileName();
+
+    bool ok = false;
+    const QString newName = QInputDialog::getText(
+        this, tr("Rename"),
+        tr("New name:"),
+        QLineEdit::Normal, oldName, &ok);
+
+    if (!ok || newName.trimmed().isEmpty() || newName.trimmed() == oldName)
+        return;  // cancelled or unchanged — no-op
+
+    const QString newPath = QDir(currentPath()).filePath(newName.trimmed());
+    if (!FileSystem::move(path.toStdString(), newPath.toStdString())) {
+        QMessageBox::critical(this, tr("Rename Failed"),
+                              tr("Could not rename '%1' to '%2'.").arg(path, newName.trimmed()));
+    } else {
+        refresh();
+    }
+}
+
+void FileView::onDelete()
+{
+    const QStringList paths = selectedPaths();
+    if (paths.isEmpty())
+        return;
+
+    // Confirmation dialog
+    QString confirmMsg;
+    if (paths.size() == 1) {
+        confirmMsg = tr("Delete '%1'?").arg(QFileInfo(paths.first()).fileName());
+    } else {
+        confirmMsg = tr("Delete %1 items?").arg(paths.size());
+    }
+
+    const int result = QMessageBox::question(
+        this, tr("Confirm Delete"), confirmMsg,
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+    if (result != QMessageBox::Yes)
+        return;
+
+    QStringList failures;
+    for (const QString& path : paths) {
+        if (!FileSystem::remove(path.toStdString())) {
+            failures << path;
+        }
+    }
+
+    if (!failures.isEmpty()) {
+        QMessageBox::critical(this, tr("Delete Failed"),
+                              tr("Could not delete the following items:\n%1")
+                                  .arg(failures.join(QLatin1Char('\n'))));
+    }
+
+    refresh();
+}
+
+void FileView::onNewFolder()
+{
+    bool ok = false;
+    const QString name = QInputDialog::getText(
+        this, tr("New Folder"),
+        tr("Folder name:"),
+        QLineEdit::Normal, QStringLiteral("New Folder"), &ok);
+
+    if (!ok || name.trimmed().isEmpty())
+        return;  // cancelled — no-op
+
+    const QString targetPath = QDir(currentPath()).filePath(name.trimmed());
+    if (!FileSystem::createDirectory(targetPath.toStdString())) {
+        QMessageBox::critical(this, tr("New Folder Failed"),
+                              tr("Could not create folder '%1'.").arg(targetPath));
+    } else {
+        refresh();
+    }
+}
+
+void FileView::onProperties()
+{
+    const QStringList paths = selectedPaths();
+    if (paths.size() != 1)
+        return;
+
+    const QString path = paths.first();
+    if (!PropertiesDialog::showFor(path, this)) {
+        QMessageBox::critical(this, tr("Properties"),
+                              tr("Could not read metadata for '%1'.").arg(path));
+    }
+}
+
+QStringList FileView::selectedPaths() const
+{
+    QStringList paths;
+    QAbstractItemView* view = activeView();
+    if (!view || !view->selectionModel())
+        return paths;
+
+    const QModelIndexList rows = view->selectionModel()->selectedRows(0);
+    for (const QModelIndex& proxyIdx : rows) {
+        const QModelIndex sourceIdx = proxy_->mapToSource(proxyIdx);
+        paths << model_->filePath(sourceIdx);
+    }
+    return paths;
+}
+
+bool FileView::currentPathIsWritable() const
+{
+    return QFileInfo(currentPath()).isWritable();
+}
+
+QAbstractItemView* FileView::activeView() const
+{
+    return (stack_->currentIndex() == 0)
+        ? static_cast<QAbstractItemView*>(tableView_)
+        : static_cast<QAbstractItemView*>(listView_);
+}
+
+void FileView::resolveSelectionForContextMenu(const QPoint& pos)
+{
+    QAbstractItemView* view = activeView();
+    if (!view)
+        return;
+
+    const QModelIndex idx = view->indexAt(pos);
+    QItemSelectionModel* sel = view->selectionModel();
+    if (!sel)
+        return;
+
+    if (idx.isValid()) {
+        // If the clicked index is not already part of the selection, replace selection
+        if (!sel->isSelected(idx)) {
+            sel->select(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        }
+        // Otherwise preserve existing multi-selection (no-op)
+    } else {
+        // Empty-area click — clear selection
+        sel->clearSelection();
+    }
+}
+
+void FileView::updateActionStates()
+{
+    const QStringList paths = selectedPaths();
+    const int selectionCount = paths.size();
+    const bool isWritable = currentPathIsWritable();
+    const bool clipboardEmpty = clipboard_.isEmpty();
+
+    // Determine if the single selected item is a file
+    bool selectionIsFile = false;
+    if (selectionCount == 1) {
+        selectionIsFile = QFileInfo(paths.first()).isFile();
+    }
+
+    const ContextMenuActionState state =
+        ContextMenuActionState::compute(selectionCount, isWritable, clipboardEmpty, selectionIsFile);
+
+    actOpen_->setEnabled(state.open);
+    actOpenWith_->setEnabled(state.openWith);
+    actCopy_->setEnabled(state.copy);
+    actCut_->setEnabled(state.cut);
+    actPaste_->setEnabled(state.paste);
+    actRename_->setEnabled(state.rename);
+    actDelete_->setEnabled(state.del);
+    actNewFolder_->setEnabled(state.newFolder);
+    actProperties_->setEnabled(state.properties);
 }

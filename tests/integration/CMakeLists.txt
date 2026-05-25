@@ -19,3 +19,16 @@ target_link_libraries(test_file_view_integration PRIVATE
     Qt6::Test
 )
 gtest_discover_tests(test_file_view_integration)
+
+# Context menu integration tests (Properties 4, 5, 8, 9, 10, 14).
+# Requires Qt6::Widgets (via file_manager_core), Qt6::Test (QSignalSpy),
+# and RapidCheck for property tests (tasks 12.2–12.7).
+add_executable(test_context_menu_integration test_context_menu_integration.cpp)
+target_link_libraries(test_context_menu_integration PRIVATE
+    file_manager_core
+    GTest::gtest_main
+    Qt6::Test
+    rapidcheck
+    rapidcheck_gtest
+)
+gtest_discover_tests(test_context_menu_integration)
