@@ -93,9 +93,13 @@ bool ExamplePlugin::fileInfo(const std::vector<std::string>& paths) {
         std::string type;
         if      (S_ISREG(st.st_mode))  type = "regular file";
         else if (S_ISDIR(st.st_mode))  type = "directory";
+#ifdef S_ISLNK
         else if (S_ISLNK(st.st_mode))  type = "symbolic link";
+#endif
         else if (S_ISFIFO(st.st_mode)) type = "named pipe (FIFO)";
+#ifdef S_ISSOCK
         else if (S_ISSOCK(st.st_mode)) type = "socket";
+#endif
         else if (S_ISBLK(st.st_mode))  type = "block device";
         else if (S_ISCHR(st.st_mode))  type = "character device";
         else                            type = "unknown";

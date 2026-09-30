@@ -16,7 +16,7 @@ gtest_discover_tests(test_logger)
 # add_test (not gtest_discover_tests) because this target depends on .so files
 # that are not guaranteed to exist at CMake configure/build time for POST_BUILD discovery.
 add_executable(test_plugin_manager test_plugin_manager.cpp)
-target_link_libraries(test_plugin_manager PRIVATE file_manager_core GTest::gtest_main dl)
+target_link_libraries(test_plugin_manager PRIVATE file_manager_core GTest::gtest_main ${CMAKE_DL_LIBS})
 target_compile_definitions(test_plugin_manager PRIVATE PLUGIN_BUILD_DIR="${PLUGIN_BUILD_DIR}")
 add_dependencies(test_plugin_manager copy_plugin move_plugin delete_plugin)
 add_test(NAME PluginManagerTests COMMAND test_plugin_manager)

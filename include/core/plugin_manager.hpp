@@ -11,6 +11,11 @@
 //Allows the code to compile in all platforms
 #ifdef _WIN32 // if code is being compiled on windows
     #include <windows.h>
+    // windows.h defines ERROR as a macro, which collides with
+    // ErrorSeverity::ERROR in the project's error handling API.
+    #ifdef ERROR
+        #undef ERROR
+    #endif
     using PluginHandle = HMODULE; // On Windows, plugin handles are of type HMODULE
 
 #else // If system is not windows its assumend its a unix like OS (like Lunix or macOS)

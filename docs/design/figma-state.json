@@ -1,0 +1,504 @@
+{
+  "fileKey": "qNyVuZx39G2xR9wX65e380",
+  "phase": "static-design-reviewed",
+  "library": {
+    "pages": {
+      "01 · Foundations & components": "4:3"
+    },
+    "components": {
+      "FM / Icon / Folder / Light": "7:97",
+      "FM / Icon / Document / Light": "7:100",
+      "FM / Icon / Search / Light": "7:103",
+      "FM / Icon / Back / Light": "7:106",
+      "FM / Icon / Forward / Light": "7:109",
+      "FM / Icon / Up / Light": "7:112",
+      "FM / Icon / Plus / Light": "7:115",
+      "FM / Icon / Close / Light": "7:118",
+      "FM / Icon / Check / Light": "7:121",
+      "FM / Icon / Grid / Light": "7:124",
+      "FM / Icon / Split / Light": "7:127",
+      "FM / Icon / More / Light": "7:130",
+      "FM / Icon / Folder / Dark": "7:133",
+      "FM / Icon / Document / Dark": "7:136",
+      "FM / Icon / Search / Dark": "7:139",
+      "FM / Icon / Back / Dark": "7:142",
+      "FM / Icon / Forward / Dark": "7:145",
+      "FM / Icon / Up / Dark": "7:148",
+      "FM / Icon / Plus / Dark": "7:151",
+      "FM / Icon / Close / Dark": "7:154",
+      "FM / Icon / Check / Dark": "7:157",
+      "FM / Icon / Grid / Dark": "7:160",
+      "FM / Icon / Split / Dark": "7:163",
+      "FM / Icon / More / Dark": "7:166",
+      "Button / Filled": "7:209",
+      "Button / Tonal": "7:250",
+      "Button / Outlined": "7:291",
+      "Button / Text": "7:332",
+      "Icon button": "7:373",
+      "Field": "7:426",
+      "Navigation item": "7:507",
+      "Tab": "7:572",
+      "Menu item": "7:637",
+      "File row": "7:778",
+      "Checkbox": "7:795",
+      "Switch": "7:812",
+      "Status badge": "7:829",
+      "Progress": "7:854",
+      "Plugin card": "7:897",
+      "Dialog": "7:934",
+      "State panel": "7:971"
+    },
+    "frames": {
+      "Foundations": "7:972",
+      "Components": "7:1021"
+    },
+    "variables": {
+      "palette/f7f9ff": "VariableID:7:5",
+      "palette/111318": "VariableID:7:6",
+      "color/surface": "VariableID:7:7",
+      "palette/edf1f9": "VariableID:7:8",
+      "palette/1d2026": "VariableID:7:9",
+      "color/surface-container": "VariableID:7:10",
+      "palette/e3e9f3": "VariableID:7:11",
+      "palette/282c34": "VariableID:7:12",
+      "color/surface-container-high": "VariableID:7:13",
+      "palette/191c20": "VariableID:7:14",
+      "palette/e2e6ef": "VariableID:7:15",
+      "color/on-surface": "VariableID:7:16",
+      "palette/444b57": "VariableID:7:17",
+      "palette/bdc6d6": "VariableID:7:18",
+      "color/on-surface-variant": "VariableID:7:19",
+      "palette/707987": "VariableID:7:20",
+      "palette/8993a3": "VariableID:7:21",
+      "color/outline": "VariableID:7:22",
+      "palette/c3ccda": "VariableID:7:23",
+      "palette/414a58": "VariableID:7:24",
+      "color/outline-variant": "VariableID:7:25",
+      "palette/174ea6": "VariableID:7:26",
+      "palette/a8c7fa": "VariableID:7:27",
+      "color/primary": "VariableID:7:28",
+      "palette/ffffff": "VariableID:7:29",
+      "palette/002f65": "VariableID:7:30",
+      "color/on-primary": "VariableID:7:31",
+      "palette/103f8a": "VariableID:7:32",
+      "palette/c2d7fc": "VariableID:7:33",
+      "color/primary-hover": "VariableID:7:34",
+      "palette/0a326f": "VariableID:7:35",
+      "palette/d5e3fd": "VariableID:7:36",
+      "color/primary-pressed": "VariableID:7:37",
+      "palette/d6e3ff": "VariableID:7:38",
+      "palette/173e71": "VariableID:7:39",
+      "color/primary-container": "VariableID:7:40",
+      "palette/001b3e": "VariableID:7:41",
+      "color/on-primary-container": "VariableID:7:42",
+      "palette/ba1a1a": "VariableID:7:43",
+      "palette/ffb4ab": "VariableID:7:44",
+      "color/error": "VariableID:7:45",
+      "palette/ffdad6": "VariableID:7:46",
+      "palette/650d0d": "VariableID:7:47",
+      "color/error-container": "VariableID:7:48",
+      "palette/410002": "VariableID:7:49",
+      "color/on-error-container": "VariableID:7:50",
+      "palette/146c43": "VariableID:7:51",
+      "palette/79dcaa": "VariableID:7:52",
+      "color/success": "VariableID:7:53",
+      "palette/d0f5df": "VariableID:7:54",
+      "palette/073c26": "VariableID:7:55",
+      "color/success-container": "VariableID:7:56",
+      "palette/765800": "VariableID:7:57",
+      "palette/f2ce73": "VariableID:7:58",
+      "color/warning": "VariableID:7:59",
+      "palette/fff0be": "VariableID:7:60",
+      "palette/443400": "VariableID:7:61",
+      "color/warning-container": "VariableID:7:62",
+      "palette/332600": "VariableID:7:63",
+      "color/on-warning-container": "VariableID:7:64",
+      "space/0": "VariableID:7:65",
+      "space/2": "VariableID:7:66",
+      "space/4": "VariableID:7:67",
+      "space/8": "VariableID:7:68",
+      "space/12": "VariableID:7:69",
+      "space/16": "VariableID:7:70",
+      "space/20": "VariableID:7:71",
+      "space/24": "VariableID:7:72",
+      "space/32": "VariableID:7:73",
+      "space/40": "VariableID:7:74",
+      "space/48": "VariableID:7:75",
+      "space/64": "VariableID:7:76",
+      "radius/none": "VariableID:7:77",
+      "radius/small": "VariableID:7:78",
+      "radius/medium": "VariableID:7:79",
+      "radius/large": "VariableID:7:80",
+      "radius/panel": "VariableID:7:81",
+      "radius/dialog": "VariableID:7:82",
+      "radius/pill": "VariableID:7:83",
+      "density/comfortable/rowHeight": "VariableID:7:84",
+      "density/comfortable/controlHeight": "VariableID:7:85",
+      "density/comfortable/navHeight": "VariableID:7:86",
+      "density/compact/rowHeight": "VariableID:7:87",
+      "density/compact/controlHeight": "VariableID:7:88",
+      "density/compact/navHeight": "VariableID:7:89"
+    }
+  },
+  "patterns": {
+    "pages": {
+      "02 · Workspace patterns": "8:325"
+    },
+    "frames": {
+      "Light workspace": "8:326",
+      "Dark workspace · split": "8:459",
+      "Plugins and settings": "8:625",
+      "Operations and recovery": "8:671"
+    },
+    "createdNodeIds": [
+      "8:326",
+      "8:327",
+      "8:328",
+      "8:329",
+      "8:334",
+      "8:335",
+      "8:336",
+      "8:337",
+      "8:338",
+      "8:343",
+      "8:348",
+      "8:353",
+      "8:358",
+      "8:359",
+      "8:364",
+      "8:369",
+      "8:370",
+      "8:371",
+      "8:379",
+      "8:387",
+      "8:388",
+      "8:391",
+      "8:394",
+      "8:397",
+      "8:398",
+      "8:400",
+      "8:401",
+      "8:402",
+      "8:403",
+      "8:404",
+      "8:411",
+      "8:418",
+      "8:425",
+      "8:432",
+      "8:439",
+      "8:446",
+      "8:447",
+      "8:448",
+      "8:451",
+      "8:452",
+      "8:453",
+      "8:455",
+      "8:456",
+      "8:458",
+      "8:459",
+      "8:460",
+      "8:461",
+      "8:462",
+      "8:467",
+      "8:468",
+      "8:469",
+      "8:470",
+      "8:471",
+      "8:476",
+      "8:481",
+      "8:486",
+      "8:491",
+      "8:492",
+      "8:497",
+      "8:502",
+      "8:503",
+      "8:504",
+      "8:512",
+      "8:520",
+      "8:521",
+      "8:524",
+      "8:527",
+      "8:530",
+      "8:531",
+      "8:533",
+      "8:534",
+      "8:535",
+      "8:536",
+      "8:537",
+      "8:544",
+      "8:551",
+      "8:558",
+      "8:565",
+      "8:572",
+      "8:579",
+      "8:580",
+      "8:581",
+      "8:582",
+      "8:589",
+      "8:596",
+      "8:603",
+      "8:610",
+      "8:617",
+      "8:624",
+      "8:625",
+      "8:626",
+      "8:627",
+      "8:628",
+      "8:633",
+      "8:634",
+      "8:635",
+      "8:636",
+      "8:637",
+      "8:644",
+      "8:651",
+      "8:658",
+      "8:659",
+      "8:660",
+      "8:662",
+      "8:664",
+      "8:666",
+      "8:667",
+      "8:669",
+      "8:671",
+      "8:672",
+      "8:673",
+      "8:674",
+      "8:679",
+      "8:680",
+      "8:681",
+      "8:682",
+      "8:692",
+      "8:700",
+      "8:701",
+      "8:705",
+      "8:709",
+      "8:713",
+      "8:719",
+      "8:725",
+      "13:618",
+      "13:619",
+      "13:620",
+      "13:621",
+      "13:634",
+      "13:635",
+      "13:636",
+      "13:649",
+      "13:650",
+      "13:651"
+    ],
+    "warnings": [],
+    "libraryAudit": [
+      {
+        "name": "Button / Filled",
+        "variants": 20,
+        "properties": [
+          "Label#7:20",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Button / Tonal",
+        "variants": 20,
+        "properties": [
+          "Label#7:41",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Button / Outlined",
+        "variants": 20,
+        "properties": [
+          "Label#7:62",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Button / Text",
+        "variants": 20,
+        "properties": [
+          "Label#7:83",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Icon button",
+        "variants": 10,
+        "properties": [
+          "Icon#7:94",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Field",
+        "variants": 10,
+        "properties": [
+          "Value#7:105",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Navigation item",
+        "variants": 16,
+        "properties": [
+          "Icon#7:138",
+          "Label#7:139",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Tab",
+        "variants": 8,
+        "properties": [
+          "Icon#7:156",
+          "Label#7:157",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Menu item",
+        "variants": 8,
+        "properties": [
+          "Icon#7:182",
+          "Label#7:183",
+          "Shortcut#7:184",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "File row",
+        "variants": 20,
+        "properties": [
+          "Icon#7:265",
+          "Name#7:266",
+          "Kind#7:267",
+          "Modified#7:268",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Checkbox",
+        "variants": 8,
+        "properties": [
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Switch",
+        "variants": 8,
+        "properties": [
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Status badge",
+        "variants": 8,
+        "properties": [
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Progress",
+        "variants": 6,
+        "properties": [
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Plugin card",
+        "variants": 6,
+        "properties": [
+          "Name#7:297",
+          "Description#7:298",
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "Dialog",
+        "variants": 4,
+        "properties": [
+          "Theme",
+          "Density",
+          "State"
+        ]
+      },
+      {
+        "name": "State panel",
+        "variants": 6,
+        "properties": [
+          "Theme",
+          "Density",
+          "State"
+        ]
+      }
+    ],
+    "counts": {
+      "screens": 4,
+      "instances": 121,
+      "componentSets": 17,
+      "variants": 198,
+      "icons": 24,
+      "variables": 85
+    },
+    "bounds": [
+      {
+        "id": "8:326",
+        "width": 1280,
+        "height": 656,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "8:459",
+        "width": 1280,
+        "height": 552,
+        "x": 1440,
+        "y": 0
+      },
+      {
+        "id": "8:625",
+        "width": 1280,
+        "height": 604,
+        "x": 0,
+        "y": 736
+      },
+      {
+        "id": "8:671",
+        "width": 1280,
+        "height": 1006,
+        "x": 1440,
+        "y": 736
+      }
+    ]
+  },
+  "validation": "figma-validation.json"
+}

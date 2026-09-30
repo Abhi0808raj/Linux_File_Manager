@@ -1,0 +1,11 @@
+---
+description: Stop near 75% context usage and hand off current work
+alwaysApply: true
+---
+
+# Context handoff
+
+- When the conversation reaches about 75% of its available context, stop the current task at the next safe checkpoint and prepare a handoff. Do not continue the task after writing the handoff unless the user asks to resume.
+- Use any explicit context or token usage indicator when available. If none is exposed, estimate from the conversation and start the handoff before the context is at risk of truncation.
+- Make the handoff self-contained: state the user's objective, decisions and constraints, work completed, current files or artifacts and their state, verification performed and results, remaining steps, blockers, and the exact next action to resume.
+- Preserve important details needed to continue without repeating completed work. Clearly label assumptions and unverified items.

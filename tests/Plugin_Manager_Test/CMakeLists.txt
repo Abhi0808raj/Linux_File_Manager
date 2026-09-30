@@ -8,7 +8,7 @@ target_include_directories(test_plugin_manager PRIVATE
 
 target_link_libraries(test_plugin_manager
         PRIVATE file_manager_core
-        PRIVATE dl
+        PRIVATE ${CMAKE_DL_LIBS}
 )
 
 set_target_properties(test_plugin_manager PROPERTIES

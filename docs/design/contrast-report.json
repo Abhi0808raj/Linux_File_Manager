@@ -1,0 +1,126 @@
+{
+  "method": "WCAG relative luminance of solid sRGB pairs",
+  "scope": "Selected semantic color pairs; not a complete accessibility audit",
+  "pairs": [
+    {
+      "foreground": "on-surface",
+      "background": "surface",
+      "mode": "Light",
+      "ratio": 16.24
+    },
+    {
+      "foreground": "on-surface",
+      "background": "surface",
+      "mode": "Dark",
+      "ratio": 14.86
+    },
+    {
+      "foreground": "on-surface-variant",
+      "background": "surface",
+      "mode": "Light",
+      "ratio": 8.35
+    },
+    {
+      "foreground": "on-surface-variant",
+      "background": "surface",
+      "mode": "Dark",
+      "ratio": 10.81
+    },
+    {
+      "foreground": "on-surface",
+      "background": "surface-container",
+      "mode": "Light",
+      "ratio": 15.1
+    },
+    {
+      "foreground": "on-surface",
+      "background": "surface-container",
+      "mode": "Dark",
+      "ratio": 13.05
+    },
+    {
+      "foreground": "on-primary",
+      "background": "primary",
+      "mode": "Light",
+      "ratio": 7.85
+    },
+    {
+      "foreground": "on-primary",
+      "background": "primary",
+      "mode": "Dark",
+      "ratio": 7.66
+    },
+    {
+      "foreground": "on-primary-container",
+      "background": "primary-container",
+      "mode": "Light",
+      "ratio": 13.28
+    },
+    {
+      "foreground": "on-primary-container",
+      "background": "primary-container",
+      "mode": "Dark",
+      "ratio": 8.3
+    },
+    {
+      "foreground": "on-error-container",
+      "background": "error-container",
+      "mode": "Light",
+      "ratio": 13.26
+    },
+    {
+      "foreground": "on-error-container",
+      "background": "error-container",
+      "mode": "Dark",
+      "ratio": 10.05
+    },
+    {
+      "foreground": "success",
+      "background": "success-container",
+      "mode": "Light",
+      "ratio": 5.47
+    },
+    {
+      "foreground": "success",
+      "background": "success-container",
+      "mode": "Dark",
+      "ratio": 7.5
+    },
+    {
+      "foreground": "on-warning-container",
+      "background": "warning-container",
+      "mode": "Light",
+      "ratio": 13.02
+    },
+    {
+      "foreground": "on-warning-container",
+      "background": "warning-container",
+      "mode": "Dark",
+      "ratio": 10.63
+    },
+    {
+      "foreground": "primary",
+      "background": "surface",
+      "mode": "Light",
+      "ratio": 7.45
+    },
+    {
+      "foreground": "primary",
+      "background": "surface",
+      "mode": "Dark",
+      "ratio": 10.81
+    },
+    {
+      "foreground": "outline",
+      "background": "surface",
+      "mode": "Light",
+      "ratio": 4.18
+    },
+    {
+      "foreground": "outline",
+      "background": "surface",
+      "mode": "Dark",
+      "ratio": 5.99
+    }
+  ]
+}
