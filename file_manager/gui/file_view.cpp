@@ -371,22 +371,22 @@ void FileView::onOpenWith()
 
 void FileView::onCopy()
 {
-    clipboard_.set(selectedPaths(), ClipboardOperation::Copy);
+    sharedClipboard_->set(selectedPaths(), ClipboardOperation::Copy);
     proxy_->clearCutPaths();
 }
 
 void FileView::onCut()
 {
     const QStringList paths = selectedPaths();
-    clipboard_.set(paths, ClipboardOperation::Cut);
+    sharedClipboard_->set(paths, ClipboardOperation::Cut);
     proxy_->setCutPaths(QSet<QString>(paths.begin(), paths.end()));
 }
 
 void FileView::onPaste()
 {
     QStringList failures;
-    const QList<QString> sources = clipboard_.paths();
-    const ClipboardOperation op = clipboard_.operation();
+    const QList<QString> sources = sharedClipboard_->paths();
+    const ClipboardOperation op = sharedClipboard_->operation();
 
     for (const QString& src : sources) {
         const QString dest = QDir(currentPath()).filePath(QFileInfo(src).fileName());
@@ -404,7 +404,7 @@ void FileView::onPaste()
     }
 
     if (op == ClipboardOperation::Cut) {
-        clipboard_.clear();
+        sharedClipboard_->clear();
         proxy_->clearCutPaths();
     }
 
@@ -569,7 +569,7 @@ void FileView::updateActionStates()
     const QStringList paths = selectedPaths();
     const int selectionCount = paths.size();
     const bool isWritable = currentPathIsWritable();
-    const bool clipboardEmpty = clipboard_.isEmpty();
+    const bool clipboardEmpty = sharedClipboard_->isEmpty();
 
     // Determine if the single selected item is a file
     bool selectionIsFile = false;
@@ -592,3 +592,18 @@ void FileView::updateActionStates()
 }
 
 void FileView::createNewFolder() { onNewFolder(); }
+
+void FileView::setClipboardManager(ClipboardManager *manager) {
+    sharedClipboard_ = manager ? manager : &clipboard_;
+    refreshClipboardIndicators();
+}
+void FileView::refreshClipboardIndicators() {
+    const auto paths = sharedClipboard_->paths();
+    if (sharedClipboard_->operation() == ClipboardOperation::Cut)
+        proxy_->setCutPaths(QSet<QString>(paths.begin(), paths.end()));
+    else
+        proxy_->clearCutPaths();
+}
+int FileView::sortColumn() const { return tableView_->horizontalHeader()->sortIndicatorSection(); }
+Qt::SortOrder FileView::sortOrder() const { return tableView_->horizontalHeader()->sortIndicatorOrder(); }
+void FileView::updateStatus() { onDirectoryLoaded(currentPath()); }

@@ -15,6 +15,9 @@
 #include <QStandardPaths>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QTabBar>
+#include <QStackedWidget>
+#include <QSignalBlocker>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle(tr("File Manager"));
@@ -84,6 +87,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   auto *newFolder = new QPushButton(tr("New folder"));
   newFolder->setObjectName("primaryButton");
   content->addLayout(titleRow);
+  auto *tabRow = new QHBoxLayout;
+  tabRow->setSpacing(12);
+  tabs_ = new QTabBar;
+  tabs_->setObjectName("folderTabs");
+  tabs_->setAccessibleName(tr("Folder tabs"));
+  tabs_->setIconSize(QSize(24, 24));
+  tabs_->setExpanding(false);
+  tabs_->setDrawBase(false);
+  tabs_->setUsesScrollButtons(true);
+  tabs_->setElideMode(Qt::ElideRight);
+  tabs_->setFocusPolicy(Qt::StrongFocus);
+  tabs_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+  tabRow->addWidget(tabs_);
+  auto *newTab = new QPushButton(tr("+ Tab"));
+  newTab->setObjectName("newTab");
+  newTab->setFixedWidth(96);
+  tabRow->addWidget(newTab);
+  tabRow->addStretch();
+  content->addLayout(tabRow);
   auto *nav = new QHBoxLayout;
   nav->setSpacing(8);
   const auto button = [this, nav](const QString &text, const QString &name,
@@ -117,12 +139,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   content->addWidget(pathError_);
   auto *actions = new QHBoxLayout;
   actions->addWidget(newFolder);
-  auto *viewMode = new QComboBox;
+  auto *viewMode = viewMode_ = new QComboBox;
   viewMode->setObjectName("viewMode");
   viewMode->setAccessibleName(tr("View mode"));
   viewMode->addItems({tr("Details"), tr("List")});
   actions->addWidget(viewMode);
-  auto *sort = new QComboBox;
+  auto *sort = sort_ = new QComboBox;
   sort->setObjectName("sortOrder");
   sort->setAccessibleName(tr("Sort files"));
   sort->addItems(
@@ -130,9 +152,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   actions->addWidget(sort);
   actions->addStretch();
   content->addLayout(actions);
-  fileView_ = new FileView;
-  fileView_->setObjectName("fileView");
-  content->addWidget(fileView_, 1);
+  stack_ = new QStackedWidget;
+  stack_->setObjectName("folderStack");
+  content->addWidget(stack_, 1);
   status_ = new QLabel;
   status_->setObjectName("workspaceStatus");
   content->addWidget(status_);
@@ -144,7 +166,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     action->setShortcut(keys);
     addAction(action);
     button->setDefaultAction(action);
-    connect(action, &QAction::triggered, fileView_, handler);
+    connect(action, &QAction::triggered, this, [this, handler] { (fileView_->*handler)(); });
     return action;
   };
   auto *actionBack = navigationAction(
@@ -159,19 +181,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   actionBack->setEnabled(false);
   actionForward->setEnabled(false);
   actionUp->setEnabled(false);
-  connect(fileView_, &FileView::canGoBackChanged, actionBack,
-          &QAction::setEnabled);
-  connect(fileView_, &FileView::canGoForwardChanged, actionForward,
-          &QAction::setEnabled);
-  connect(fileView_, &FileView::canGoUpChanged, actionUp, &QAction::setEnabled);
-  connect(fileView_, &FileView::pathChanged, this, &MainWindow::updateLocation);
-  connect(fileView_, &FileView::statusChanged, this,
-          [this](int dirs, int files) {
-            status_->setText(tr("%1 items · %2 folders · %3 files")
-                                 .arg(dirs + files)
-                                 .arg(dirs)
-                                 .arg(files));
-          });
   connect(pathEntry_, &QLineEdit::returnPressed, this, [this] {
     QString path = pathEntry_->text().trimmed();
     if (path == "~")
@@ -202,8 +211,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                              index == 1 ? Qt::DescendingOrder
                                         : Qt::AscendingOrder);
   });
-  connect(newFolder, &QPushButton::clicked, fileView_,
-          &FileView::createNewFolder);
+  connect(newFolder, &QPushButton::clicked, this, [this] { fileView_->createNewFolder(); });
   const auto shortcut = [this](const QKeySequence &keys, auto handler) {
     auto *s = new QShortcut(keys, this);
     connect(s, &QShortcut::activated, this, handler);
@@ -212,7 +220,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     pathEntry_->setFocus();
     pathEntry_->selectAll();
   });
-  fileView_->navigateTo(QDir::homePath());
+  auto *newTabAction = new QAction(tr("New tab"), this);
+  newTabAction->setObjectName("actionNewTab");
+  newTabAction->setShortcut(QKeySequence("Ctrl+T"));
+  addAction(newTabAction);
+  connect(newTabAction, &QAction::triggered, this, [this] { addTab(fileView_->currentPath()); });
+  connect(newTab, &QPushButton::clicked, newTabAction, &QAction::trigger);
+  closeTab_ = new QAction(tr("Close tab"), this);
+  closeTab_->setObjectName("actionCloseTab");
+  closeTab_->setShortcut(QKeySequence("Ctrl+W"));
+  addAction(closeTab_);
+  connect(closeTab_, &QAction::triggered, this, [this] { closeTab(tabs_->currentIndex()); });
+  connect(tabs_, &QTabBar::currentChanged, this, &MainWindow::activateTab);
+  shortcut(QKeySequence("Ctrl+Tab"), [this] { tabs_->setCurrentIndex((tabs_->currentIndex()+1)%tabs_->count()); });
+  shortcut(QKeySequence("Ctrl+Shift+Tab"), [this] { tabs_->setCurrentIndex((tabs_->currentIndex()+tabs_->count()-1)%tabs_->count()); });
+  addTab(QDir::homePath());
 }
 void MainWindow::updateLocation(const QString &path) {
   pathEntry_->setText(QDir::toNativeSeparators(path));
@@ -229,4 +251,74 @@ void MainWindow::updateLocation(const QString &path) {
   for (int i = 0; i < places_->count(); ++i)
     if (places_->item(i)->data(Qt::UserRole).toString() == path)
       places_->item(i)->setSelected(true);
+}
+
+void MainWindow::addTab(const QString &path) {
+  if (!QFileInfo(path).isDir()) {
+    pathError_->setText(tr("Folder does not exist: %1").arg(path));
+    pathError_->show();
+    return;
+  }
+  auto *view = new FileView;
+  view->setObjectName("fileView");
+  view->setClipboardManager(&clipboard_);
+  stack_->addWidget(view);
+  connect(view, &FileView::pathChanged, this, [this, view](const QString &path) {
+    const int index = stack_->indexOf(view);
+    QString label = QFileInfo(path).fileName();
+    if (label.isEmpty()) label = QDir::toNativeSeparators(path);
+    tabs_->setTabText(index, label);
+    tabs_->setTabToolTip(index, path);
+    if (view == fileView_) updateLocation(path);
+  });
+  connect(view, &FileView::statusChanged, this, [this, view](int dirs, int files) {
+    if (view == fileView_) status_->setText(tr("%1 items · %2 folders · %3 files").arg(dirs+files).arg(dirs).arg(files));
+  });
+  const auto capability = [this, view](bool) { if (view == fileView_) syncControls(); };
+  connect(view, &FileView::canGoBackChanged, this, capability);
+  connect(view, &FileView::canGoForwardChanged, this, capability);
+  connect(view, &FileView::canGoUpChanged, this, capability);
+  QSignalBlocker tabBlock(tabs_);
+  const int index = tabs_->addTab(QIcon(":/icons/figma/folder.svg"), QString());
+  auto *close = new QToolButton;
+  close->setIcon(QIcon(":/icons/figma/close.svg"));
+  close->setIconSize(QSize(24, 24));
+  close->setAccessibleName(tr("Close tab"));
+  close->setToolTip(tr("Close tab"));
+  close->setFixedSize(24,24);
+  tabs_->setTabButton(index, QTabBar::RightSide, close);
+  connect(close, &QToolButton::clicked, this, [this, view] { closeTab(stack_->indexOf(view)); });
+  view->navigateTo(path);
+  tabs_->setCurrentIndex(index);
+  activateTab(index);
+}
+void MainWindow::activateTab(int index) {
+  if (index < 0 || index >= stack_->count()) return;
+  stack_->setCurrentIndex(index);
+  fileView_ = qobject_cast<FileView *>(stack_->widget(index));
+  updateLocation(fileView_->currentPath());
+  fileView_->refreshClipboardIndicators();
+  fileView_->updateStatus();
+  syncControls();
+}
+void MainWindow::syncControls() {
+  if (!fileView_) return;
+  findChild<QAction *>("actionBack")->setEnabled(fileView_->canGoBack());
+  findChild<QAction *>("actionForward")->setEnabled(fileView_->canGoForward());
+  findChild<QAction *>("actionUp")->setEnabled(!fileView_->currentPath().isEmpty() && fileView_->currentPath() != QDir::rootPath());
+  QSignalBlocker modeBlock(viewMode_), sortBlock(sort_);
+  viewMode_->setCurrentIndex(fileView_->currentViewMode() == ViewMode::Table ? 0 : 1);
+  sort_->setCurrentIndex(fileView_->sortColumn() == 0 ? (fileView_->sortOrder() == Qt::DescendingOrder ? 1 : 0) : fileView_->sortColumn()+1);
+  closeTab_->setEnabled(tabs_->count() > 1);
+  for (int i=0; i<tabs_->count(); ++i)
+    if (auto *button = tabs_->tabButton(i, QTabBar::RightSide)) button->setEnabled(tabs_->count()>1);
+}
+void MainWindow::closeTab(int index) {
+  if (tabs_->count() <= 1 || index < 0) return;
+  QWidget *view = stack_->widget(index);
+  QSignalBlocker block(tabs_);
+  stack_->removeWidget(view);
+  tabs_->removeTab(index);
+  delete view;
+  activateTab(tabs_->currentIndex());
 }

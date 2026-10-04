@@ -37,6 +37,14 @@ public:
     void navigateTo(const QString& path);
     QString currentPath() const;
 
+    void setClipboardManager(ClipboardManager *manager);
+    void refreshClipboardIndicators();
+    bool canGoBack() const { return historyIndex_ > 0; }
+    bool canGoForward() const { return historyIndex_ + 1 < history_.size(); }
+    int sortColumn() const;
+    Qt::SortOrder sortOrder() const;
+    void updateStatus();
+
     // View mode
     void setViewMode(ViewMode mode);
     ViewMode currentViewMode() const;
@@ -110,6 +118,7 @@ private:
 
     // --- Context-menu state (Req 12.1) ---
     ClipboardManager    clipboard_;
+    ClipboardManager* sharedClipboard_ = &clipboard_;
     CutStateProxyModel* proxy_       = nullptr;   // owned; wraps model_
     QMenu*              contextMenu_ = nullptr;   // owned; built once
 

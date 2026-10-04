@@ -72,3 +72,9 @@ QScrollBar::handle:hover { background: @outline@; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0px; height: 0px; }
 QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
 QToolTip { background: @surface-container-high@; color: @on-surface@; border: 1px solid @outline-variant@; padding: 6px; }
+
+QTabBar#folderTabs::tab { background: transparent; border: 1px solid transparent; border-radius: @radius-medium@px; padding: 7px 8px; margin-right: 12px; width: 150px; height: 24px; }
+QTabBar#folderTabs::tab:selected { background: @primary-container@; color: @on-primary-container@; }
+QTabBar#folderTabs::tab:hover { background: @surface-container-high@; }
+QTabBar#folderTabs:focus { border: 1px solid @primary@; border-radius: @radius-medium@px; }
+QTabBar#folderTabs QToolButton { min-height: 0px; padding: 0px; border-radius: 4px; }

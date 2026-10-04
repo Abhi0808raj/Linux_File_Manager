@@ -14,6 +14,9 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QToolButton>
+#include <QTabBar>
+#include <QStackedWidget>
+#include <QAction>
 #include <gtest/gtest.h>
 class WorkspaceTest : public testing::Test {
 protected:
@@ -99,24 +102,36 @@ TEST_F(WorkspaceTest, OptionalWorkspaceScreenshots) {
     GTEST_SKIP() << "FM_SCREENSHOT_DIR unset";
   QDir().mkpath(output);
   QTemporaryDir sample;
+  QDir(sample.path()).mkdir("Documents");
+  QDir(sample.path()).mkdir("Downloads");
   QDir(sample.path()).mkdir("Projects");
-  QDir(sample.path()).mkdir("Design assets");
+  QDir(sample.path()+"/Documents").mkdir("Projects");
+  QDir(sample.path()+"/Documents").mkdir("Design assets");
   for (const QString &name : {QString("Quarterly report.pdf"),
                               QString("A very long document name demonstrating "
                                       "the filename column elision.txt"),
                               QString("notes.md")}) {
-    QFile file(sample.path() + "/" + name);
+    QFile file(sample.path() + "/Documents/" + name);
     ASSERT_TRUE(file.open(QIODevice::WriteOnly));
     file.write("sample workspace content");
   }
   MainWindow window;
   window.findChild<FileView *>("fileView")->navigateTo(sample.path());
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  auto *stack = window.findChild<QStackedWidget *>("folderStack");
+  qobject_cast<FileView *>(stack->currentWidget())->navigateTo(sample.path()+"/Downloads");
+  auto *tabs = window.findChild<QTabBar *>("folderTabs");
+  tabs->setCurrentIndex(0);
+  qobject_cast<FileView *>(stack->currentWidget())->navigateTo(sample.path()+"/Documents");
   window.show();
   QTest::qWait(700);
   ASSERT_TRUE(window.grab().save(output + "/workspace-desktop.png"));
   window.resize(800, 600);
   QTest::qWait(100);
   ASSERT_TRUE(window.grab().save(output + "/workspace-narrow.png"));
+  for (int i=0; i<9; ++i) window.findChild<QAction *>("actionNewTab")->trigger();
+  QTest::qWait(100);
+  ASSERT_TRUE(window.grab().save(output + "/workspace-overflow.png"));
 }
 
 TEST_F(WorkspaceTest, IconsLoadAndCachedFolderStatusUpdates) {
@@ -168,4 +183,131 @@ TEST_F(WorkspaceTest, SortSelectorOwnsSortingAndLongNamesDoNotWrap) {
   EXPECT_EQ(header->sortIndicatorOrder(), Qt::AscendingOrder);
   EXPECT_FALSE(table->wordWrap());
   EXPECT_EQ(table->textElideMode(), Qt::ElideRight);
+}
+
+TEST_F(WorkspaceTest, TabsKeepIndependentHistoryAndRouteNavigation) {
+  QTemporaryDir dir;
+  QDir(dir.path()).mkdir("child");
+  MainWindow window;
+  auto *first = window.findChild<FileView *>("fileView");
+  first->navigateTo(dir.path());
+  auto *tabs = window.findChild<QTabBar *>("folderTabs");
+  ASSERT_NE(tabs, nullptr);
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  auto *stack = window.findChild<QStackedWidget *>("folderStack");
+  auto *second = qobject_cast<FileView *>(stack->currentWidget());
+  ASSERT_NE(first, second);
+  EXPECT_EQ(second->currentPath(), dir.path());
+  EXPECT_FALSE(window.findChild<QAction *>("actionBack")->isEnabled());
+  second->navigateTo(dir.path()+"/child");
+  tabs->setCurrentIndex(0);
+  EXPECT_EQ(first->currentPath(), dir.path());
+  window.findChild<QToolButton *>("navigateBack")->click();
+  EXPECT_NE(first->currentPath(), dir.path());
+  EXPECT_EQ(second->currentPath(), dir.path()+"/child");
+}
+TEST_F(WorkspaceTest, TabsRestoreViewSortAndKeepLastTab) {
+  MainWindow window;
+  auto *tabs = window.findChild<QTabBar *>("folderTabs");
+  ASSERT_NE(tabs, nullptr);
+  auto *mode = window.findChild<QComboBox *>("viewMode");
+  auto *sort = window.findChild<QComboBox *>("sortOrder");
+  mode->setCurrentIndex(1);
+  sort->setCurrentIndex(4);
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  EXPECT_EQ(mode->currentIndex(), 0);
+  EXPECT_EQ(sort->currentIndex(), 0);
+  tabs->setCurrentIndex(0);
+  EXPECT_EQ(mode->currentIndex(), 1);
+  EXPECT_EQ(sort->currentIndex(), 4);
+  window.findChild<QAction *>("actionCloseTab")->trigger();
+  EXPECT_EQ(tabs->count(), 1);
+  EXPECT_FALSE(window.findChild<QAction *>("actionCloseTab")->isEnabled());
+  window.findChild<QAction *>("actionCloseTab")->trigger();
+  EXPECT_EQ(tabs->count(), 1);
+}
+
+TEST_F(WorkspaceTest, ClosingInactiveAndActiveTabsKeepsNeighborAndLabels) {
+  QTemporaryDir dir;
+  QDir(dir.path()).mkdir("child");
+  MainWindow window;
+  auto *tabs = window.findChild<QTabBar *>("folderTabs");
+  auto *stack = window.findChild<QStackedWidget *>("folderStack");
+  auto *first = qobject_cast<FileView *>(stack->currentWidget());
+  first->navigateTo(dir.path());
+  EXPECT_EQ(tabs->tabToolTip(0), dir.path());
+  EXPECT_EQ(tabs->tabText(0), QFileInfo(dir.path()).fileName());
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  auto *second = qobject_cast<FileView *>(stack->currentWidget());
+  second->navigateTo(dir.path()+"/child");
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  auto *third = qobject_cast<FileView *>(stack->currentWidget());
+  auto *close = qobject_cast<QToolButton *>(tabs->tabButton(0, QTabBar::RightSide));
+  ASSERT_NE(close, nullptr);
+  close->click();
+  EXPECT_EQ(stack->currentWidget(), third);
+  EXPECT_EQ(tabs->count(), 2);
+  window.findChild<QAction *>("actionCloseTab")->trigger();
+  EXPECT_EQ(stack->currentWidget(), second);
+  EXPECT_EQ(tabs->count(), 1);
+}
+TEST_F(WorkspaceTest, ClipboardSurvivesSourceTabCloseAndSelectionRestores) {
+  for (const char *operation : {"onCopy", "onCut"}) {
+    QTemporaryDir source, destination;
+    QFile file(source.path()+"/payload.txt");
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    file.write("payload"); file.close();
+    MainWindow window;
+    auto *tabs = window.findChild<QTabBar *>("folderTabs");
+    auto *stack = window.findChild<QStackedWidget *>("folderStack");
+    auto *view = qobject_cast<FileView *>(stack->currentWidget());
+    view->navigateTo(source.path());
+    auto *table = view->findChild<QTableView *>();
+    for (int i=0; i<30 && table->model()->rowCount(table->rootIndex())==0; ++i) QTest::qWait(20);
+    auto index = table->model()->index(0, 0, table->rootIndex());
+    ASSERT_TRUE(index.isValid());
+    table->selectionModel()->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    ASSERT_TRUE(QMetaObject::invokeMethod(view, operation));
+    window.findChild<QAction *>("actionNewTab")->trigger();
+    auto *target = qobject_cast<FileView *>(stack->currentWidget());
+    target->navigateTo(destination.path());
+    tabs->setCurrentIndex(0);
+    EXPECT_FALSE(table->selectionModel()->selectedRows().isEmpty());
+    // Inactive location/status/capability signals must not overwrite the active controls.
+    target->navigateTo(destination.path());
+    EXPECT_EQ(QDir::fromNativeSeparators(window.findChild<QLineEdit *>("pathEntry")->text()), source.path());
+    tabs->setCurrentIndex(1);
+    qobject_cast<QToolButton *>(tabs->tabButton(0, QTabBar::RightSide))->click();
+    ASSERT_TRUE(QMetaObject::invokeMethod(target, "onPaste"));
+    EXPECT_TRUE(QFileInfo::exists(destination.path()+"/payload.txt"));
+    EXPECT_EQ(QFileInfo::exists(source.path()+"/payload.txt"), QString(operation)=="onCopy");
+  }
+}
+TEST_F(WorkspaceTest, TabKeyboardShortcutsCycleAndClose) {
+  MainWindow window;
+  window.show(); window.activateWindow(); QTest::qWait(40);
+  auto *tabs = window.findChild<QTabBar *>("folderTabs");
+  QTest::keyClick(&window, Qt::Key_T, Qt::ControlModifier);
+  ASSERT_EQ(tabs->count(), 2);
+  EXPECT_EQ(tabs->currentIndex(), 1);
+  QTest::keyClick(&window, Qt::Key_Tab, Qt::ControlModifier);
+  EXPECT_EQ(tabs->currentIndex(), 0);
+  QTest::keyClick(&window, Qt::Key_Tab, Qt::ControlModifier | Qt::ShiftModifier);
+  EXPECT_EQ(tabs->currentIndex(), 1);
+  QTest::keyClick(&window, Qt::Key_W, Qt::ControlModifier);
+  EXPECT_EQ(tabs->count(), 1);
+}
+
+TEST_F(WorkspaceTest, NewTabFromDeletedLocationKeepsUsableExistingTab) {
+  QTemporaryDir dir;
+  const QString path = dir.path()+"/removed";
+  ASSERT_TRUE(QDir().mkdir(path));
+  MainWindow window;
+  window.findChild<FileView *>("fileView")->navigateTo(path);
+  ASSERT_TRUE(QDir().rmdir(path));
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  EXPECT_EQ(window.findChild<QTabBar *>("folderTabs")->count(), 1);
+  EXPECT_FALSE(window.findChild<QLabel *>("pathError")->isHidden());
+  window.findChild<QAction *>("actionUp")->trigger();
+  EXPECT_EQ(window.findChild<FileView *>("fileView")->currentPath(), dir.path());
 }
