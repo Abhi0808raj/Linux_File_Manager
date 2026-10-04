@@ -85,6 +85,11 @@ FileView::FileView(QWidget* parent)
     // --- Directory loaded → status signal ---
     connect(model_, &QFileSystemModel::directoryLoaded,
             this, &FileView::onDirectoryLoaded);
+    const auto changed = [this] { updateStatus(); };
+    connect(proxy_, &QAbstractItemModel::rowsInserted, this, changed);
+    connect(proxy_, &QAbstractItemModel::rowsRemoved, this, changed);
+    connect(proxy_, &QAbstractItemModel::modelReset, this, changed);
+    connect(proxy_, &QAbstractItemModel::dataChanged, this, changed);
 
     // --- Context menu (built once, reused per right-click) ---
     contextMenu_ = new QMenu(this);
@@ -148,6 +153,9 @@ void FileView::applyHistoryPosition(int newIndex)
     historyIndex_ = newIndex;
 
     const QString path = currentPath();
+    searchQuery_.clear();
+    proxy_->setFolderSearch(path, searchQuery_);
+    emit searchChanged(searchQuery_);
     model_->setRootPath(path);
     const QModelIndex sourceRoot = model_->index(path);
     const QModelIndex proxyRoot = proxy_->mapFromSource(sourceRoot);
@@ -155,7 +163,7 @@ void FileView::applyHistoryPosition(int newIndex)
     listView_->setRootIndex(proxyRoot);
 
     emit pathChanged(path);
-    onDirectoryLoaded(path);
+    updateStatus();
 
     // Emit capability signals only when their value flips relative to the
     // last emitted value (tracked via prevCanGo*_ cached members).
@@ -287,15 +295,22 @@ void FileView::onItemActivated(const QModelIndex& index)
 
 void FileView::onDirectoryLoaded(const QString& path)
 {
-    if (path != currentPath()) return;
+    loadedFolders_.insert(QDir(path).absolutePath());
+    if (model_->index(path) != model_->index(currentPath())) return;
+    updateStatus();
+}
+
+void FileView::updateStatus()
+{
+    const QString path = currentPath();
     // Count subdirectories and files in the loaded directory
     int dirCount  = 0;
     int fileCount = 0;
 
-    const QModelIndex parent = model_->index(path);
-    const int rows = model_->rowCount(parent);
+    const QModelIndex parent = proxy_->mapFromSource(model_->index(path));
+    const int rows = proxy_->rowCount(parent);
     for (int i = 0; i < rows; ++i) {
-        const QModelIndex child = model_->index(i, 0, parent);
+        const QModelIndex child = proxy_->mapToSource(proxy_->index(i, 0, parent));
         if (model_->isDir(child))
             ++dirCount;
         else
@@ -606,4 +621,28 @@ void FileView::refreshClipboardIndicators() {
 }
 int FileView::sortColumn() const { return tableView_->horizontalHeader()->sortIndicatorSection(); }
 Qt::SortOrder FileView::sortOrder() const { return tableView_->horizontalHeader()->sortIndicatorOrder(); }
-void FileView::updateStatus() { onDirectoryLoaded(currentPath()); }
+void FileView::setSearchQuery(const QString& query) {
+    if (query == searchQuery_) return;
+    // Drop hidden selections before filtering so no action retains an invisible target.
+    for (auto* view : {static_cast<QAbstractItemView*>(tableView_), static_cast<QAbstractItemView*>(listView_)}) {
+        const auto selected = view->selectionModel()->selectedRows();
+        for (const auto& index : selected)
+            if (!index.data().toString().contains(query, Qt::CaseInsensitive))
+                view->selectionModel()->select(index, QItemSelectionModel::Deselect | QItemSelectionModel::Rows);
+    }
+    searchQuery_ = query;
+    proxy_->setFolderSearch(currentPath(), query);
+    emit searchChanged(query);
+    updateStatus();
+}
+QString FileView::folderState() const {
+    const QFileInfo folder(currentPath());
+    if (!folder.isDir() || !folder.isReadable()) return tr("Folder unavailable");
+#ifdef Q_OS_UNIX
+    // Reading directory entries and traversing them require separate permissions.
+    if (!folder.isExecutable()) return tr("Folder unavailable");
+#endif
+    if (!loadedFolders_.contains(QDir(currentPath()).absolutePath())) return tr("Loading folder…");
+    return QString();
+}
+void FileView::focusFiles() { activeView()->setFocus(); }

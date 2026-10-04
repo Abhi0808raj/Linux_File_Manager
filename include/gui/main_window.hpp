@@ -1,6 +1,7 @@
 #pragma once
 #include <QMainWindow>
 #include "gui/clipboard_manager.hpp"
+class QPushButton;
 class QTabBar;
 class QStackedWidget;
 class QComboBox;
@@ -29,6 +30,11 @@ private:
   void closeTab(int index);
   void syncControls();
   QLineEdit *pathEntry_;
+  QLineEdit *search_;
+  QLabel *searchState_;
+  QPushButton *clearSearch_;
+  void updateSearchStatus(int dirs, int files);
+  bool eventFilter(QObject *watched, QEvent *event) override;
   QLabel *title_;
   QLabel *status_;
   QLabel *pathError_;

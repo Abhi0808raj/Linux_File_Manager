@@ -44,6 +44,10 @@ public:
     int sortColumn() const;
     Qt::SortOrder sortOrder() const;
     void updateStatus();
+    void setSearchQuery(const QString& query);
+    QString searchQuery() const { return searchQuery_; }
+    QString folderState() const;
+    void focusFiles();
 
     // View mode
     void setViewMode(ViewMode mode);
@@ -62,6 +66,7 @@ public slots:
 signals:
     void pathChanged(const QString& newPath);
     void statusChanged(int dirCount, int fileCount);
+    void searchChanged(const QString& query);
     void canGoBackChanged(bool canGo);
     void canGoForwardChanged(bool canGo);
     void canGoUpChanged(bool canGo);
@@ -75,6 +80,8 @@ private:
     QList<QString> history_;                       // ordered list of visited paths
     int            historyIndex_ = -1;             // current position in history
     ViewMode       viewMode_     = ViewMode::Table;
+    QString searchQuery_;
+    QSet<QString> loadedFolders_;
 
     // Cached capability booleans — used to emit change signals only on flip
     bool prevCanGoBack_    = false;

@@ -5,7 +5,7 @@
 #include <QFileSystemModel>
 
 CutStateProxyModel::CutStateProxyModel(QObject* parent)
-    : QIdentityProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 }
 
@@ -43,7 +43,7 @@ QVariant CutStateProxyModel::data(const QModelIndex& index, int role) const
             const QString filePath = fsModel->filePath(sourceIndex);
             if (isCut(filePath)) {
                 // Get the base foreground color and apply 50% alpha
-                QVariant baseFg = QIdentityProxyModel::data(index, Qt::ForegroundRole);
+                QVariant baseFg = QSortFilterProxyModel::data(index, Qt::ForegroundRole);
                 QColor color;
                 if (baseFg.isValid()) {
                     color = baseFg.value<QBrush>().color();
@@ -55,5 +55,23 @@ QVariant CutStateProxyModel::data(const QModelIndex& index, int role) const
             }
         }
     }
-    return QIdentityProxyModel::data(index, role);
+    return QSortFilterProxyModel::data(index, role);
+}
+
+void CutStateProxyModel::setFolderSearch(const QString& path, const QString& query)
+{
+    searchPath_ = path;
+    query_ = query;
+    invalidateFilter();
+}
+bool CutStateProxyModel::filterAcceptsRow(int row, const QModelIndex& parent) const
+{
+    auto* fs = qobject_cast<QFileSystemModel*>(sourceModel());
+    if (!fs || query_.isEmpty() || parent != fs->index(searchPath_)) return true;
+    return fs->fileName(fs->index(row, 0, parent)).contains(query_, Qt::CaseInsensitive);
+}
+void CutStateProxyModel::sort(int column, Qt::SortOrder order)
+{
+    // Preserve QFileSystemModel's directory-first, typed sorting.
+    if (sourceModel()) sourceModel()->sort(column, order);
 }

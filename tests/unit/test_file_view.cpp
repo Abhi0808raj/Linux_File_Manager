@@ -1025,13 +1025,19 @@ TEST_F(FileViewTest, DoubleClickOnDirectoryNavigatesIntoIt) {
     ASSERT_TRUE(subdirIdx.isValid()) << "Could not resolve QModelIndex for " << subdirPath.toStdString();
     ASSERT_TRUE(model->isDir(subdirIdx));
 
+    // Activation comes from the displayed proxy, not the underlying filesystem model.
+    auto* proxy = view.findChild<CutStateProxyModel*>();
+    ASSERT_NE(proxy, nullptr);
+    const QModelIndex visibleIndex = proxy->mapFromSource(subdirIdx);
+    ASSERT_TRUE(visibleIndex.isValid());
+
     // Invoke the private slot directly.  QMetaObject::invokeMethod bypasses
     // C++ access control because slots are part of the meta-object system.
     const bool invoked = QMetaObject::invokeMethod(
         &view,
         "onItemActivated",
         Qt::DirectConnection,
-        Q_ARG(QModelIndex, subdirIdx));
+        Q_ARG(QModelIndex, visibleIndex));
     ASSERT_TRUE(invoked) << "QMetaObject::invokeMethod failed to invoke onItemActivated";
 
     EXPECT_EQ(view.currentPath(), subdirPath);

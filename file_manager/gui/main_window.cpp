@@ -18,6 +18,7 @@
 #include <QTabBar>
 #include <QStackedWidget>
 #include <QSignalBlocker>
+#include <QKeyEvent>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle(tr("File Manager"));
@@ -34,7 +35,30 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   headingFont.setPixelSize(16);
   headingFont.setWeight(QFont::Medium);
   heading->setFont(headingFont);
-  outer->addWidget(heading);
+  auto *headingRow = new QHBoxLayout;
+  headingRow->setSpacing(12);
+  heading->setFixedWidth(180);
+  headingRow->addWidget(heading);
+  search_ = new QLineEdit;
+  search_->setObjectName("folderSearch");
+  search_->setAccessibleName(tr("Search this folder"));
+  search_->setPlaceholderText(tr("Search this folder"));
+  search_->setMaximumWidth(340);
+  search_->setMinimumWidth(200);
+  search_->setFixedHeight(48);
+  auto *searchIcon = new QLabel(search_);
+  searchIcon->setPixmap(QIcon(":/icons/figma/search.svg").pixmap(24, 24));
+  searchIcon->setFixedSize(24, 24);
+  searchIcon->move(12, 12);
+  searchIcon->setAttribute(Qt::WA_TransparentForMouseEvents);
+  search_->setTextMargins(32, 0, 0, 0);
+  search_->installEventFilter(this);
+  headingRow->addWidget(search_);
+  headingRow->addStretch();
+  outer->addLayout(headingRow);
+  connect(search_, &QLineEdit::textChanged, this, [this](const QString &text) {
+    if (fileView_) fileView_->setSearchQuery(text);
+  });
   auto *body = new QHBoxLayout;
   body->setSpacing(24);
   outer->addLayout(body, 1);
@@ -152,6 +176,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   actions->addWidget(sort);
   actions->addStretch();
   content->addLayout(actions);
+  auto *scopeRow = new QHBoxLayout;
+  searchState_ = new QLabel;
+  searchState_->setObjectName("searchState");
+  scopeRow->addWidget(searchState_, 1);
+  clearSearch_ = new QPushButton(tr("Clear search"));
+  clearSearch_->setObjectName("clearSearch");
+  scopeRow->addWidget(clearSearch_);
+  connect(clearSearch_, &QPushButton::clicked, search_, &QLineEdit::clear);
+  content->addLayout(scopeRow);
   stack_ = new QStackedWidget;
   stack_->setObjectName("folderStack");
   content->addWidget(stack_, 1);
@@ -220,6 +253,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     pathEntry_->setFocus();
     pathEntry_->selectAll();
   });
+  shortcut(QKeySequence("Ctrl+F"), [this] {
+    search_->setFocus(); search_->selectAll();
+  });
   auto *newTabAction = new QAction(tr("New tab"), this);
   newTabAction->setObjectName("actionNewTab");
   newTabAction->setShortcut(QKeySequence("Ctrl+T"));
@@ -272,7 +308,11 @@ void MainWindow::addTab(const QString &path) {
     if (view == fileView_) updateLocation(path);
   });
   connect(view, &FileView::statusChanged, this, [this, view](int dirs, int files) {
-    if (view == fileView_) status_->setText(tr("%1 items · %2 folders · %3 files").arg(dirs+files).arg(dirs).arg(files));
+    if (view == fileView_) updateSearchStatus(dirs, files);
+  });
+  connect(view, &FileView::searchChanged, this, [this, view](const QString& query) {
+    if (view != fileView_) return;
+    QSignalBlocker block(search_); search_->setText(query);
   });
   const auto capability = [this, view](bool) { if (view == fileView_) syncControls(); };
   connect(view, &FileView::canGoBackChanged, this, capability);
@@ -296,10 +336,32 @@ void MainWindow::activateTab(int index) {
   if (index < 0 || index >= stack_->count()) return;
   stack_->setCurrentIndex(index);
   fileView_ = qobject_cast<FileView *>(stack_->widget(index));
+  { QSignalBlocker block(search_); search_->setText(fileView_->searchQuery()); }
   updateLocation(fileView_->currentPath());
   fileView_->refreshClipboardIndicators();
   fileView_->updateStatus();
   syncControls();
+}
+void MainWindow::updateSearchStatus(int dirs, int files) {
+  const QString state = fileView_->folderState();
+  const bool searching = !fileView_->searchQuery().isEmpty();
+  clearSearch_->setVisible(searching);
+  searchState_->setVisible(searching || !state.isEmpty());
+  if (!state.isEmpty()) {
+    searchState_->setText(state); status_->setText(state); return;
+  }
+  const int count = dirs + files;
+  searchState_->setText(count == 0 ? tr("This folder · No matching files")
+                                 : count == 1 ? tr("This folder · 1 result")
+                                              : tr("This folder · %1 results").arg(count));
+  status_->setText(tr("%1 items · %2 folders · %3 files").arg(dirs+files).arg(dirs).arg(files));
+}
+bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
+  if (watched == search_ && event->type() == QEvent::KeyPress &&
+      static_cast<QKeyEvent *>(event)->key() == Qt::Key_Escape) {
+    search_->clear(); if (fileView_) fileView_->focusFiles(); return true;
+  }
+  return QMainWindow::eventFilter(watched, event);
 }
 void MainWindow::syncControls() {
   if (!fileView_) return;

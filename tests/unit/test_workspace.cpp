@@ -17,6 +17,7 @@
 #include <QTabBar>
 #include <QStackedWidget>
 #include <QAction>
+#include <QPushButton>
 #include <gtest/gtest.h>
 class WorkspaceTest : public testing::Test {
 protected:
@@ -69,6 +70,166 @@ TEST_F(WorkspaceTest, InvalidPathKeepsLocationAndShowsInlineError) {
   QTest::keyClick(entry, Qt::Key_Return);
   EXPECT_EQ(view->currentPath(), before);
   EXPECT_FALSE(window.findChild<QLabel *>("pathError")->isHidden());
+}
+TEST_F(WorkspaceTest, SearchIsLiteralTabLocalAndNavigationClears) {
+  QTemporaryDir dir;
+  QDir(dir.path()).mkdir("Alpha[1]");
+  QDir(dir.path()).mkdir("Beta");
+  QFile file(dir.path()+"/alpha[1].txt");
+  ASSERT_TRUE(file.open(QIODevice::WriteOnly)); file.close();
+  MainWindow window;
+  auto *view = window.findChild<FileView *>("fileView");
+  view->navigateTo(dir.path());
+  auto *search = window.findChild<QLineEdit *>("folderSearch");
+  ASSERT_NE(search, nullptr);
+  QTest::qWait(150);
+  search->setText("ALPHA[1]");
+  auto *table = view->findChild<QTableView *>();
+  EXPECT_EQ(table->model()->rowCount(table->rootIndex()), 2);
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  EXPECT_TRUE(search->text().isEmpty());
+  window.findChild<QTabBar *>("folderTabs")->setCurrentIndex(0);
+  EXPECT_EQ(search->text(), "ALPHA[1]");
+  view->navigateTo(dir.path()+"/Beta");
+  EXPECT_TRUE(search->text().isEmpty());
+}
+TEST_F(WorkspaceTest, SearchClearsHiddenSelectionAndUpdatesForNewFiles) {
+  QTemporaryDir dir;
+  QFile initial(dir.path()+"/alpha.txt");
+  ASSERT_TRUE(initial.open(QIODevice::WriteOnly)); initial.close();
+  MainWindow window;
+  auto *view = window.findChild<FileView *>("fileView");
+  view->navigateTo(dir.path());
+  QTest::qWait(150);
+  auto *table = view->findChild<QTableView *>();
+  auto index = table->model()->index(0, 0, table->rootIndex());
+  ASSERT_TRUE(index.isValid());
+  table->selectionModel()->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+  auto *search = window.findChild<QLineEdit *>("folderSearch");
+  search->setText("beta");
+  EXPECT_TRUE(table->selectionModel()->selectedRows().isEmpty());
+  EXPECT_EQ(table->model()->rowCount(table->rootIndex()), 0);
+  EXPECT_TRUE(window.findChild<QLabel *>("searchState")->text().contains("No matching files"));
+  QFile added(dir.path()+"/beta.txt");
+  ASSERT_TRUE(added.open(QIODevice::WriteOnly)); added.close();
+  for (int i=0; i<100 && table->model()->rowCount(table->rootIndex())==0; ++i) QTest::qWait(20);
+  EXPECT_EQ(table->model()->rowCount(table->rootIndex()), 1);
+  EXPECT_TRUE(window.findChild<QLabel *>("searchState")->text().contains("1 result"));
+  auto visible = table->model()->index(0,0,table->rootIndex());
+  table->selectionModel()->select(visible,QItemSelectionModel::Select | QItemSelectionModel::Rows);
+  ASSERT_TRUE(QMetaObject::invokeMethod(view,"onCopy"));
+  QTemporaryDir destination;
+  view->navigateTo(destination.path());
+  ASSERT_TRUE(QMetaObject::invokeMethod(view,"onPaste"));
+  EXPECT_TRUE(QFileInfo::exists(destination.path()+"/beta.txt"));
+  EXPECT_FALSE(QFileInfo::exists(destination.path()+"/alpha.txt"));
+}
+TEST_F(WorkspaceTest, SearchKeyboardClearAndInvalidNavigation) {
+  MainWindow window;
+  window.show(); window.activateWindow(); QTest::qWait(40);
+  auto *search = window.findChild<QLineEdit *>("folderSearch");
+  search->setText("unmatched-name");
+  QTest::keyClick(&window, Qt::Key_F, Qt::ControlModifier);
+  EXPECT_TRUE(search->hasFocus());
+  EXPECT_EQ(search->selectedText(), search->text());
+  auto *entry = window.findChild<QLineEdit *>("pathEntry");
+  entry->setText("/missing-search-test-path"); QTest::keyClick(entry, Qt::Key_Return);
+  EXPECT_EQ(search->text(),"unmatched-name");
+  search->setFocus(); QTest::keyClick(search,Qt::Key_Escape);
+  EXPECT_TRUE(search->text().isEmpty());
+  EXPECT_TRUE(window.findChild<QTableView *>()->hasFocus());
+}
+TEST_F(WorkspaceTest, SearchDistinguishesLoadingNoMatchesAndUnavailableFolder) {
+  QTemporaryDir root;
+  ASSERT_TRUE(root.isValid());
+  const QString folder = root.path() + "/empty";
+  ASSERT_TRUE(QDir().mkdir(folder));
+  MainWindow window;
+  auto *view = window.findChild<FileView *>("fileView");
+  auto *search = window.findChild<QLineEdit *>("folderSearch");
+  auto *state = window.findChild<QLabel *>("searchState");
+  view->navigateTo(folder);
+  search->setText("missing");
+  EXPECT_TRUE(state->text().contains("Loading"));
+  for (int i = 0; i < 100 && !view->folderState().isEmpty(); ++i)
+    QTest::qWait(20);
+  EXPECT_TRUE(state->text().contains("No matching files"));
+  window.findChild<QPushButton *>("clearSearch")->click();
+  EXPECT_TRUE(search->text().isEmpty());
+  EXPECT_TRUE(state->isHidden());
+  search->setText("missing");
+  ASSERT_TRUE(QDir().rmdir(folder));
+  view->updateStatus();
+  EXPECT_TRUE(state->text().contains("unavailable"));
+  EXPECT_FALSE(state->text().contains("No matching files"));
+}
+
+TEST_F(WorkspaceTest, SearchInListUsesNativeSizeSortAndDoesNotRecurse) {
+  QTemporaryDir root;
+  ASSERT_TRUE(root.isValid());
+  for (const auto &entry : {qMakePair(QString("alpha.bin"), 1000),
+                            qMakePair(QString("beta.bin"), 2),
+                            qMakePair(QString("gamma.bin"), 10)}) {
+    QFile file(root.path() + "/" + entry.first);
+    ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    ASSERT_EQ(file.write(QByteArray(entry.second, 'x')), entry.second);
+  }
+  ASSERT_TRUE(QDir(root.path()).mkdir("nested"));
+  QFile nested(root.path() + "/nested/deep-report.txt");
+  ASSERT_TRUE(nested.open(QIODevice::WriteOnly));
+  nested.close();
+  MainWindow window;
+  auto *view = window.findChild<FileView *>("fileView");
+  view->navigateTo(root.path());
+  for (int i = 0; i < 100 && !view->folderState().isEmpty(); ++i)
+    QTest::qWait(20);
+  ASSERT_TRUE(view->folderState().isEmpty());
+  window.findChild<QComboBox *>("viewMode")->setCurrentIndex(1);
+  auto *list = view->findChild<QListView *>();
+  ASSERT_NE(list, nullptr);
+  auto *search = window.findChild<QLineEdit *>("folderSearch");
+  search->setText(".bin");
+  window.findChild<QComboBox *>("sortOrder")->setCurrentIndex(2);
+  QTest::qWait(100);
+  ASSERT_EQ(list->model()->rowCount(list->rootIndex()), 3);
+  EXPECT_EQ(list->model()->index(0, 0, list->rootIndex()).data().toString(), "beta.bin");
+  EXPECT_EQ(list->model()->index(1, 0, list->rootIndex()).data().toString(), "gamma.bin");
+  EXPECT_EQ(list->model()->index(2, 0, list->rootIndex()).data().toString(), "alpha.bin");
+  search->setText("deep-report");
+  EXPECT_EQ(list->model()->rowCount(list->rootIndex()), 0);
+  search->setText("nested");
+  EXPECT_EQ(list->model()->rowCount(list->rootIndex()), 1);
+}
+
+TEST_F(WorkspaceTest, BackgroundSearchUpdatesDoNotOverwriteActiveTab) {
+  QTemporaryDir first, second;
+  ASSERT_TRUE(first.isValid());
+  ASSERT_TRUE(second.isValid());
+  MainWindow window;
+  auto *firstView = window.findChild<FileView *>("fileView");
+  firstView->navigateTo(first.path());
+  auto *search = window.findChild<QLineEdit *>("folderSearch");
+  search->setText("first");
+  window.findChild<QAction *>("actionNewTab")->trigger();
+  auto *stack = window.findChild<QStackedWidget *>("folderStack");
+  auto *secondView = qobject_cast<FileView *>(stack->currentWidget());
+  ASSERT_NE(secondView, firstView);
+  secondView->navigateTo(second.path());
+  search->setText("second");
+  for (int i = 0; i < 100 && !secondView->folderState().isEmpty(); ++i)
+    QTest::qWait(20);
+  const QString status = window.findChild<QLabel *>("workspaceStatus")->text();
+  QFile file(first.path() + "/first-match.txt");
+  ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+  file.close();
+  auto *table = firstView->findChild<QTableView *>();
+  for (int i = 0; i < 100 && table->model()->rowCount(table->rootIndex()) != 1; ++i)
+    QTest::qWait(20);
+  EXPECT_EQ(search->text(), "second");
+  EXPECT_EQ(window.findChild<QLabel *>("workspaceStatus")->text(), status);
+  window.findChild<QTabBar *>("folderTabs")->setCurrentIndex(0);
+  EXPECT_EQ(search->text(), "first");
+  EXPECT_TRUE(window.findChild<QLabel *>("searchState")->text().contains("1 result"));
 }
 TEST_F(WorkspaceTest, PlacesAndViewSelectorOperateOnRealFileView) {
   MainWindow window;
@@ -126,9 +287,17 @@ TEST_F(WorkspaceTest, OptionalWorkspaceScreenshots) {
   window.show();
   QTest::qWait(700);
   ASSERT_TRUE(window.grab().save(output + "/workspace-desktop.png"));
+  window.findChild<QLineEdit *>("folderSearch")->setText("report");
+  QTest::qWait(100);
+  ASSERT_TRUE(window.grab().save(output + "/search-desktop.png"));
+  window.findChild<QLineEdit *>("folderSearch")->setText("missing-report");
+  QTest::qWait(100);
+  ASSERT_TRUE(window.grab().save(output + "/search-no-results.png"));
+  window.findChild<QLineEdit *>("folderSearch")->setText("report");
   window.resize(800, 600);
   QTest::qWait(100);
   ASSERT_TRUE(window.grab().save(output + "/workspace-narrow.png"));
+  ASSERT_TRUE(window.grab().save(output + "/search-narrow.png"));
   for (int i=0; i<9; ++i) window.findChild<QAction *>("actionNewTab")->trigger();
   QTest::qWait(100);
   ASSERT_TRUE(window.grab().save(output + "/workspace-overflow.png"));

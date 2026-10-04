@@ -78,3 +78,7 @@ QTabBar#folderTabs::tab:selected { background: @primary-container@; color: @on-p
 QTabBar#folderTabs::tab:hover { background: @surface-container-high@; }
 QTabBar#folderTabs:focus { border: 1px solid @primary@; border-radius: @radius-medium@px; }
 QTabBar#folderTabs QToolButton { min-height: 0px; padding: 0px; border-radius: 4px; }
+
+QLineEdit#folderSearch { min-height: 46px; max-height: 46px; background: @surface-container@; border: 1px solid @outline@; border-radius: @radius-medium@px; padding: 0px 8px; }
+QLineEdit#folderSearch:focus { border: 1px solid @primary@; }
+QLabel#searchState { color: @on-surface-variant@; }

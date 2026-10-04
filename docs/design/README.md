@@ -6,6 +6,7 @@ Start with [the Figma design system](https://www.figma.com/design/qNyVuZx39G2xR9
 
 - [Qt implementation status](implementation-workspace.md): first workspace milestone, test evidence, and remaining flows.
 - [Folder tabs](implementation-tabs.md): independent tab state, shared clipboard, keyboard controls and verification.
+- [Current-folder search](implementation-search.md): literal filename search, tab behavior, loading/error states and verification.
 - [PRD](PRD.md): confirmed direction, proposed requirements, user journeys, and release acceptance.
 - [Design specification](design-system.md): components, states, tokens, accessibility, and plugin rules.
 - [Delivery process](process.md): review, implementation milestones, and contribution process.
