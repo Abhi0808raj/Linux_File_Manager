@@ -48,12 +48,19 @@ FileView::FileView(QWidget* parent)
     setLayout(layout);
 
     // --- QTableView configuration ---
-    tableView_->setAlternatingRowColors(true);
+    tableView_->setAlternatingRowColors(false);
+    tableView_->setShowGrid(false);
+    tableView_->setIconSize(QSize(24, 24));
+    tableView_->verticalHeader()->setDefaultSectionSize(48);
+    tableView_->horizontalHeader()->setMinimumHeight(48);
+    tableView_->setWordWrap(false);
+    tableView_->setTextElideMode(Qt::ElideRight);
     tableView_->setSelectionBehavior(QAbstractItemView::SelectRows);
     tableView_->setSortingEnabled(true);
+    tableView_->horizontalHeader()->setSectionsClickable(false);
     tableView_->verticalHeader()->setVisible(false);
     tableView_->horizontalHeader()->setStretchLastSection(true);
-    tableView_->setColumnWidth(0, 200);  // Name
+    tableView_->setColumnWidth(0, 280);  // Name
     tableView_->setColumnWidth(1, 80);   // Size
     tableView_->setColumnWidth(2, 80);   // Type
     tableView_->setColumnWidth(3, 150);  // Date Modified
@@ -61,15 +68,18 @@ FileView::FileView(QWidget* parent)
 
     // --- QListView configuration ---
     listView_->setViewMode(QListView::ListMode);
+    listView_->setIconSize(QSize(24, 24));
+    listView_->setSpacing(8);
+    listView_->setUniformItemSizes(true);
 
     // --- Default state ---
     viewMode_     = ViewMode::Table;
     historyIndex_ = -1;
 
     // --- Double-click connections ---
-    connect(tableView_, &QTableView::doubleClicked,
+    connect(tableView_, &QTableView::activated,
             this, &FileView::onItemActivated);
-    connect(listView_, &QListView::doubleClicked,
+    connect(listView_, &QListView::activated,
             this, &FileView::onItemActivated);
 
     // --- Directory loaded → status signal ---
@@ -138,12 +148,14 @@ void FileView::applyHistoryPosition(int newIndex)
     historyIndex_ = newIndex;
 
     const QString path = currentPath();
+    model_->setRootPath(path);
     const QModelIndex sourceRoot = model_->index(path);
     const QModelIndex proxyRoot = proxy_->mapFromSource(sourceRoot);
     tableView_->setRootIndex(proxyRoot);
     listView_->setRootIndex(proxyRoot);
 
     emit pathChanged(path);
+    onDirectoryLoaded(path);
 
     // Emit capability signals only when their value flips relative to the
     // last emitted value (tracked via prevCanGo*_ cached members).
@@ -198,10 +210,7 @@ ViewMode FileView::currentViewMode() const
 
 void FileView::setSortColumn(int column, Qt::SortOrder order)
 {
-    // Only the QTableView supports column sorting; the QListView has no
-    // notion of columns, so this is inherently a no-op when the active
-    // view is ListMode (the sort indicator on the table is updated either
-    // way, which is the documented behavior).
+    // Both views share the sorted proxy model; the table supplies its sort indicator.
     tableView_->sortByColumn(column, order);
 }
 
@@ -278,6 +287,7 @@ void FileView::onItemActivated(const QModelIndex& index)
 
 void FileView::onDirectoryLoaded(const QString& path)
 {
+    if (path != currentPath()) return;
     // Count subdirectories and files in the loaded directory
     int dirCount  = 0;
     int fileCount = 0;
@@ -580,3 +590,5 @@ void FileView::updateActionStates()
     actNewFolder_->setEnabled(state.newFolder);
     actProperties_->setEnabled(state.properties);
 }
+
+void FileView::createNewFolder() { onNewFolder(); }

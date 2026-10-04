@@ -41,7 +41,7 @@ public:
     void setViewMode(ViewMode mode);
     ViewMode currentViewMode() const;
 
-    // Sorting (table mode only; no-op in list mode)
+    // Sorting (shared model order applies to both views)
     void setSortColumn(int column, Qt::SortOrder order);
 
 public slots:
@@ -49,6 +49,7 @@ public slots:
     void goForward();
     void goUp();
     void refresh();
+    void createNewFolder();
 
 signals:
     void pathChanged(const QString& newPath);

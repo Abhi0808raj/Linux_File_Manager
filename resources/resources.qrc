@@ -1,6 +1,15 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/">
         <file>stylesheet.qss</file>
+        <file alias="workspace-tokens.json">../docs/design/tokens.json</file>
+        <file alias="icons/figma/document.svg">icons/figma/document.svg</file>
+        <file alias="icons/figma/pictures.svg">icons/figma/pictures.svg</file>
+        <file alias="icons/figma/folder.svg">icons/figma/folder.svg</file>
+        <file alias="icons/figma/close.svg">icons/figma/close.svg</file>
+        <file alias="icons/figma/trash.svg">icons/figma/trash.svg</file>
+        <file alias="icons/figma/downloads.svg">icons/figma/downloads.svg</file>
+        <file alias="icons/figma/home.svg">icons/figma/home.svg</file>
+        <file alias="icons/figma/search.svg">icons/figma/search.svg</file>
         <file>icons/arrow_back.svg</file>
         <file>icons/arrow_forward.svg</file>
         <file>icons/arrow_upward.svg</file>

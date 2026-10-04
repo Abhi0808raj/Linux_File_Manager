@@ -1,6 +1,6 @@
 # File Manager — design system v0.1
 
-Status: v0.1 design library and four workspace pattern frames created and visually reviewed in the [student-account Figma file](https://www.figma.com/design/qNyVuZx39G2xR9wX65e380/Untitled?node-id=7-972). The local preview and exported token file describe the proposed product appearance; application styling has not been changed. Implementation and usability validation remain separate work.
+Status: v0.1 design library and four workspace pattern frames created and visually reviewed in the [student-account Figma file](https://www.figma.com/design/qNyVuZx39G2xR9wX65e380/Untitled?node-id=7-972). The Qt application now implements the first light, comfortable workspace milestone using the exported tokens; see [implementation status and verification](implementation-workspace.md). The complete Figma flows and usability validation remain separate work.
 
 ## Direction
 

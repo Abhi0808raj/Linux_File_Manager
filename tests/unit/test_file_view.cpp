@@ -87,7 +87,7 @@ TEST_F(FileViewTest, TableViewColumnWidthsMatchDesignSpec) {
     // Column widths — test the columns that were explicitly configured.
     // Column 3 (Date Modified) is stretched via setStretchLastSection(true),
     // so we only test columns 0–2 whose widths are fixed by setColumnWidth().
-    EXPECT_EQ(tableView->columnWidth(0), 200) << "Name column width should be 200";
+    EXPECT_EQ(tableView->columnWidth(0), 280) << "Name column width should be 280";
     EXPECT_EQ(tableView->columnWidth(1), 80)  << "Size column width should be 80";
     EXPECT_EQ(tableView->columnWidth(2), 80)  << "Type column width should be 80";
 }

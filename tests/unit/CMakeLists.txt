@@ -79,3 +79,7 @@ target_link_libraries(test_properties_dialog
         Qt6::Test
 )
 gtest_discover_tests(test_properties_dialog)
+
+add_executable(test_workspace test_workspace.cpp ${QRC_FILE})
+target_link_libraries(test_workspace PRIVATE file_manager_core GTest::gtest_main Qt6::Test)
+gtest_discover_tests(test_workspace)

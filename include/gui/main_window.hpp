@@ -1,31 +1,22 @@
 #pragma once
-
 #include <QMainWindow>
-#include <QTreeWidgetItem>
-
-// Forward declaration of the auto-generated UI class
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
-
-// Forward declaration — full definition lives in include/gui/file_view.hpp
-// and is pulled in transitively via ui_mainwindow.h in main_window.cpp.
 class FileView;
-
+class QLineEdit;
+class QLabel;
+class QListWidget;
+class QListWidgetItem;
 class MainWindow : public QMainWindow {
-    Q_OBJECT
-
+  Q_OBJECT
 public:
-    MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
-
-private slots:
-    void on_navigationTreeWidget_itemClicked(QTreeWidgetItem* item, int column);
-    void updateStatusBar(int dirCount, int fileCount);
+  explicit MainWindow(QWidget *parent = nullptr);
+  ~MainWindow() override = default;
 
 private:
-    void setupModernUI();
-    void setupConnections();
-
-    Ui::MainWindow* ui;
+  FileView *fileView_;
+  QLineEdit *pathEntry_;
+  QLabel *title_;
+  QLabel *status_;
+  QLabel *pathError_;
+  QListWidget *places_;
+  void updateLocation(const QString &path);
 };
